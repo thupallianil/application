@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const API_URL = 'http://127.0.0.1:8001/api/settings/extras/';
 
 export default function Extras() {
 
@@ -8,6 +12,44 @@ export default function Extras() {
     maintenance: false,
   });
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      const fetched = {};
+      for (const key in res.data) {
+        if (res.data[key] !== null) fetched[key] = res.data[key];
+      }
+      setExtra(prev => ({ ...prev, ...fetched }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await axios.put(API_URL, extra);
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save settings!");
+    }
+  };
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleSave(e);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow p-8">
 
@@ -15,64 +57,57 @@ export default function Extras() {
         Extra Settings
       </h1>
 
-      <div className="space-y-6">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-6">
 
-        <label className="flex items-center gap-3">
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={extra.darkMode}
+              onChange={() =>
+                setExtra({
+                  ...extra,
+                  darkMode: !extra.darkMode,
+                })
+              }
+            />
+            Enable Dark Mode
+          </label>
 
-          <input
-            type="checkbox"
-            checked={extra.darkMode}
-            onChange={() =>
-              setExtra({
-                ...extra,
-                darkMode: !extra.darkMode,
-              })
-            }
-          />
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={extra.notifications}
+              onChange={() =>
+                setExtra({
+                  ...extra,
+                  notifications: !extra.notifications,
+                })
+              }
+            />
+            Email Notifications
+          </label>
 
-          Enable Dark Mode
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={extra.maintenance}
+              onChange={() =>
+                setExtra({
+                  ...extra,
+                  maintenance: !extra.maintenance,
+                })
+              }
+            />
+            Maintenance Mode
+          </label>
 
-        </label>
+        </div>
 
-        <label className="flex items-center gap-3">
-
-          <input
-            type="checkbox"
-            checked={extra.notifications}
-            onChange={() =>
-              setExtra({
-                ...extra,
-                notifications: !extra.notifications,
-              })
-            }
-          />
-
-          Email Notifications
-
-        </label>
-
-        <label className="flex items-center gap-3">
-
-          <input
-            type="checkbox"
-            checked={extra.maintenance}
-            onChange={() =>
-              setExtra({
-                ...extra,
-                maintenance: !extra.maintenance,
-              })
-            }
-          />
-
-          Maintenance Mode
-
-        </label>
-
-      </div>
-
-      <button className="mt-8 bg-blue-600 text-white px-8 py-3 rounded-lg">
-        Save Settings
-      </button>
+        <button type="submit" className="mt-8 bg-blue-600 text-white px-8 py-3 rounded-lg">
+          Save Settings
+        </button>
+      </form>
 
     </div>
   );

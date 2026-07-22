@@ -1,15 +1,26 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function AddPayment() {
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const [payment, setPayment] = useState({
-    invoice: "",
+    payment_id: "",
     client: "",
     amount: "",
     method: "Cash",
-    paymentDate: "",
-    notes: "",
   });
+
+  useEffect(() => {
+    axios.get('http://127.0.0.1:8001/api/clients/')
+      .then(res => setClients(res.data))
+      .catch(err => console.error(err));
+  }, []);
 
   const handleChange = (e) => {
     setPayment({
@@ -20,7 +31,21 @@ export default function AddPayment() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(payment);
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    axios.post('http://127.0.0.1:8001/api/payments/', payment)
+      .then(() => {
+        setLoading(false);
+        setSuccess(true);
+        setTimeout(() => navigate('/payments'), 1500);
+      })
+      .catch(err => {
+        setLoading(false);
+        console.error("Error adding payment", err);
+        setError("Failed to add payment. Please try again.");
+      });
   };
 
   return (
@@ -30,60 +55,57 @@ export default function AddPayment() {
         Add Payment
       </h1>
 
+      {error && <div className="mb-4 text-red-600 font-medium">{error}</div>}
+      {success && <div className="mb-4 text-green-600 font-medium">Payment saved successfully! Redirecting...</div>}
+
       <form
         onSubmit={handleSubmit}
         className="grid md:grid-cols-2 gap-6"
       >
 
         <input
-          name="invoice"
-          placeholder="Invoice Number"
+          required
+          name="payment_id"
+          placeholder="Payment ID (e.g. PAY-1001)"
           onChange={handleChange}
-          className="border rounded-lg p-3"
-        />
-
-        <input
-          name="client"
-          placeholder="Client Name"
-          onChange={handleChange}
-          className="border rounded-lg p-3"
-        />
-
-        <input
-          name="amount"
-          placeholder="Amount"
-          onChange={handleChange}
+          value={payment.payment_id}
           className="border rounded-lg p-3"
         />
 
         <select
-          name="method"
+          required
+          name="client"
           onChange={handleChange}
+          value={payment.client}
           className="border rounded-lg p-3"
         >
-          <option>Cash</option>
-          <option>UPI</option>
-          <option>Bank Transfer</option>
-          <option>Credit Card</option>
+          <option value="">Select Client</option>
+          {clients.map(c => <option key={c.id} value={c.id}>{c.client}</option>)}
         </select>
 
         <input
-          type="date"
-          name="paymentDate"
+          required
+          name="amount"
+          placeholder="Amount"
           onChange={handleChange}
+          value={payment.amount}
           className="border rounded-lg p-3"
         />
 
-        <textarea
-          rows="4"
-          name="notes"
-          placeholder="Payment Notes"
+        <select
+          required
+          name="method"
           onChange={handleChange}
-          className="border rounded-lg p-3 md:col-span-2"
-        />
+          value={payment.method}
+          className="border rounded-lg p-3"
+        >
+          <option value="Cash">Cash</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Credit Card">Credit Card</option>
+        </select>
 
-        <button className="bg-blue-600 text-white py-3 rounded-lg md:col-span-2 hover:bg-blue-700">
-          Save Payment
+        <button disabled={loading} className="bg-blue-600 text-white py-3 rounded-lg md:col-span-2 hover:bg-blue-700 disabled:opacity-50">
+          {loading ? 'Saving...' : 'Save Payment'}
         </button>
 
       </form>

@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Translate() {
 
   const [language, setLanguage] = useState("English");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(language);
+    alert("Language settings saved locally.");
+  };
 
   return (
     <div className="bg-white rounded-xl shadow p-8">

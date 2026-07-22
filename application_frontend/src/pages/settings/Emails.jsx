@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import axios from 'axios';
+
+const API_URL = 'http://127.0.0.1:8001/api/settings/emails/';
 
 export default function Emails() {
   const [email, setEmail] = useState({
@@ -9,11 +13,49 @@ export default function Emails() {
     password: "",
   });
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      const fetched = {};
+      for (const key in res.data) {
+        if (res.data[key] !== null) fetched[key] = res.data[key];
+      }
+      setEmail(prev => ({ ...prev, ...fetched }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await axios.put(API_URL, email);
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save settings!");
+    }
+  };
+
+
   const handleChange = (e) => {
     setEmail({
       ...email,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleSave(e);
   };
 
   return (
@@ -23,10 +65,11 @@ export default function Emails() {
         Email Settings
       </h1>
 
-      <form className="grid md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
 
         <input
           name="mailFrom"
+          value={email.mailFrom}
           placeholder="Mail From"
           onChange={handleChange}
           className="border p-3 rounded-lg"
@@ -34,6 +77,7 @@ export default function Emails() {
 
         <input
           name="smtpHost"
+          value={email.smtpHost}
           placeholder="SMTP Host"
           onChange={handleChange}
           className="border p-3 rounded-lg"
@@ -41,6 +85,7 @@ export default function Emails() {
 
         <input
           name="smtpPort"
+          value={email.smtpPort}
           placeholder="SMTP Port"
           onChange={handleChange}
           className="border p-3 rounded-lg"
@@ -48,6 +93,7 @@ export default function Emails() {
 
         <input
           name="username"
+          value={email.username}
           placeholder="SMTP Username"
           onChange={handleChange}
           className="border p-3 rounded-lg"
@@ -56,6 +102,7 @@ export default function Emails() {
         <input
           type="password"
           name="password"
+          value={email.password}
           placeholder="SMTP Password"
           onChange={handleChange}
           className="border p-3 rounded-lg md:col-span-2"

@@ -1,139 +1,72 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from 'axios';
 
-export default function General() {
-
-  const [formData, setFormData] = useState({
-    appName: "Invoice Management",
-    companyName: "Ultrakey IT Solutions",
-    timezone: "Asia/Kolkata",
-    currency: "INR",
-    language: "English",
+export default function Dashboard() {
+  const [data, setData] = useState({
+    clients: 0,
+    invoices: 0,
+    quotes: 0,
+    revenue: 0,
   });
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [clientsRes, invoicesRes, quotesRes] = await Promise.all([
+          axios.get('http://127.0.0.1:8001/api/clients/'),
+          axios.get('http://127.0.0.1:8001/api/invoices/'),
+          axios.get('http://127.0.0.1:8001/api/quotes/'),
+        ]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+        const invoices = invoicesRes.data;
+        const totalRevenue = invoices.reduce((acc, inv) => {
+          const amt = parseFloat(inv.amount) || 0;
+          return acc + amt;
+        }, 0);
 
-    console.log(formData);
-  };
+        setData({
+          clients: clientsRes.data.length,
+          invoices: invoices.length,
+          quotes: quotesRes.data.length,
+          revenue: totalRevenue,
+        });
+      } catch (err) {
+        console.error("Error fetching dashboard data", err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <div className="bg-white rounded-xl shadow p-8">
+    <div className="p-4 md:p-6 bg-[#f0f0f1] min-h-screen">
+      <div className="max-w-6xl">
+        <h1 className="text-[23px] font-normal leading-[29px] text-[#1d2327] mb-6">Dashboard</h1>
 
-      <h1 className="text-3xl font-bold mb-8">
-        General Settings
-      </h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="grid md:grid-cols-2 gap-6"
-      >
-
-        <div>
-
-          <label className="block mb-2 font-medium">
-            Application Name
-          </label>
-
-          <input
-            name="appName"
-            value={formData.appName}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-[#c3c4c7] p-4 shadow-sm">
+            <h3 className="text-[#a7aaad] font-semibold text-[13px] uppercase tracking-wider mb-2">Total Revenue</h3>
+            <p className="text-2xl font-bold text-[#1d2327]">₹{data.revenue.toFixed(2)}</p>
+          </div>
+          <div className="bg-white border border-[#c3c4c7] p-4 shadow-sm">
+            <h3 className="text-[#a7aaad] font-semibold text-[13px] uppercase tracking-wider mb-2">Invoices</h3>
+            <p className="text-2xl font-bold text-[#1d2327]">{data.invoices}</p>
+          </div>
+          <div className="bg-white border border-[#c3c4c7] p-4 shadow-sm">
+            <h3 className="text-[#a7aaad] font-semibold text-[13px] uppercase tracking-wider mb-2">Quotes</h3>
+            <p className="text-2xl font-bold text-[#1d2327]">{data.quotes}</p>
+          </div>
+          <div className="bg-white border border-[#c3c4c7] p-4 shadow-sm">
+            <h3 className="text-[#a7aaad] font-semibold text-[13px] uppercase tracking-wider mb-2">Clients</h3>
+            <p className="text-2xl font-bold text-[#1d2327]">{data.clients}</p>
+          </div>
         </div>
 
-        <div>
-
-          <label className="block mb-2 font-medium">
-            Company Name
-          </label>
-
-          <input
-            name="companyName"
-            value={formData.companyName}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
-
+        <div className="bg-white border border-[#c3c4c7] p-6 shadow-sm min-h-[400px]">
+          <h2 className="text-lg font-semibold text-[#1d2327] mb-4">Recent Activity</h2>
+          <p className="text-[#2c3338] text-sm">Welcome to Ultrakey IT Solutions Private Limited billing panel. Navigation is available on the left.</p>
         </div>
-
-        <div>
-
-          <label className="block mb-2 font-medium">
-            Time Zone
-          </label>
-
-          <select
-            name="timezone"
-            value={formData.timezone}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          >
-            <option>Asia/Kolkata</option>
-            <option>UTC</option>
-            <option>America/New_York</option>
-          </select>
-
-        </div>
-
-        <div>
-
-          <label className="block mb-2 font-medium">
-            Currency
-          </label>
-
-          <select
-            name="currency"
-            value={formData.currency}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          >
-            <option>INR</option>
-            <option>USD</option>
-            <option>EUR</option>
-          </select>
-
-        </div>
-
-        <div>
-
-          <label className="block mb-2 font-medium">
-            Language
-          </label>
-
-          <select
-            name="language"
-            value={formData.language}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          >
-            <option>English</option>
-            <option>Hindi</option>
-            <option>Telugu</option>
-          </select>
-
-        </div>
-
-        <div className="md:col-span-2">
-
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg"
-          >
-            Save Settings
-          </button>
-
-        </div>
-
-      </form>
-
+      </div>
     </div>
   );
 }

@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const API_URL = 'http://127.0.0.1:8001/api/settings/pdf/';
 
 export default function Pdf() {
 
@@ -9,6 +13,39 @@ export default function Pdf() {
     watermark: false,
   });
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      const fetched = {};
+      for (const key in res.data) {
+        if (res.data[key] !== null) fetched[key] = res.data[key];
+      }
+      setPdf(prev => ({ ...prev, ...fetched }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await axios.put(API_URL, pdf);
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save settings!");
+    }
+  };
+
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -18,6 +55,11 @@ export default function Pdf() {
     });
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleSave(e);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow p-8">
 
@@ -25,7 +67,7 @@ export default function Pdf() {
         PDF Settings
       </h1>
 
-      <form className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
 
         <select
           name="template"

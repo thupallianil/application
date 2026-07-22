@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const API_URL = 'http://127.0.0.1:8001/api/settings/licenses/';
 
 export default function Licenses() {
 
@@ -9,6 +13,39 @@ export default function Licenses() {
     expiry: "",
   });
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      const fetched = {};
+      for (const key in res.data) {
+        if (res.data[key] !== null) fetched[key] = res.data[key];
+      }
+      setLicense(prev => ({ ...prev, ...fetched }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await axios.put(API_URL, license);
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save settings!");
+    }
+  };
+
+
   const handleChange = (e) => {
     setLicense({
       ...license,
@@ -18,8 +55,9 @@ export default function Licenses() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(license);
+    handleSave(e);
   };
+
 
   return (
     <div className="bg-white rounded-xl shadow p-8">
@@ -35,6 +73,7 @@ export default function Licenses() {
 
         <input
           name="company"
+          value={license.company}
           placeholder="Company Name"
           onChange={handleChange}
           className="border rounded-lg p-3"
@@ -42,6 +81,7 @@ export default function Licenses() {
 
         <input
           name="purchaseCode"
+          value={license.purchaseCode}
           placeholder="Purchase Code"
           onChange={handleChange}
           className="border rounded-lg p-3"
@@ -49,6 +89,7 @@ export default function Licenses() {
 
         <input
           name="licenseKey"
+          value={license.licenseKey}
           placeholder="License Key"
           onChange={handleChange}
           className="border rounded-lg p-3 md:col-span-2"
@@ -57,6 +98,7 @@ export default function Licenses() {
         <input
           type="date"
           name="expiry"
+          value={license.expiry}
           onChange={handleChange}
           className="border rounded-lg p-3 md:col-span-2"
         />

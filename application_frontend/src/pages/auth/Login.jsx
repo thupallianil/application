@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    console.log("Login");
+    console.log("Login successful");
+    navigate("/dashboard");
   };
 
   return (

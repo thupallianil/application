@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import AdminLayout from "./layouts/AdminLayout";
 import ClientLayout from "./layouts/ClientLayout";
+import SettingsLayout from "./layouts/SettingsLayout";
 
 // Authentication
 import Login from "./pages/auth/Login";
@@ -58,6 +61,9 @@ import TaxReport from "./pages/reports/TaxReport";
 import Profile from "./pages/profile/Profile";
 import ChangePassword from "./pages/profile/ChangePassword";
 
+// System
+import System from "./pages/system/System";
+
 // Errors
 import NotFound from "./pages/errors/NotFound";
 import Unauthorized from "./pages/errors/Unauthorized";
@@ -66,6 +72,7 @@ import ServerError from "./pages/errors/ServerError";
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
 
         {/* Public */}
@@ -79,17 +86,19 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
 
           {/* Settings */}
-          <Route path="/settings/general" element={<General />} />
-          <Route path="/settings/business" element={<Business />} />
-          <Route path="/settings/quotes" element={<Quotes />} />
-          <Route path="/settings/invoices" element={<Invoices />} />
-          <Route path="/settings/payments" element={<Payments />} />
-          <Route path="/settings/tax" element={<Tax />} />
-          <Route path="/settings/emails" element={<Emails />} />
-          <Route path="/settings/pdf" element={<Pdf />} />
-          <Route path="/settings/translate" element={<Translate />} />
-          <Route path="/settings/extras" element={<Extras />} />
-          <Route path="/settings/licenses" element={<Licenses />} />
+          <Route element={<SettingsLayout />}>
+            <Route path="/settings/general" element={<General />} />
+            <Route path="/settings/business" element={<Business />} />
+            <Route path="/settings/quotes" element={<Quotes />} />
+            <Route path="/settings/invoices" element={<Invoices />} />
+            <Route path="/settings/payments" element={<Payments />} />
+            <Route path="/settings/tax" element={<Tax />} />
+            <Route path="/settings/emails" element={<Emails />} />
+            <Route path="/settings/pdf" element={<Pdf />} />
+            <Route path="/settings/translate" element={<Translate />} />
+            <Route path="/settings/extras" element={<Extras />} />
+            <Route path="/settings/licenses" element={<Licenses />} />
+          </Route>
 
           {/* Clients */}
           <Route path="/clients" element={<ClientList />} />
@@ -125,6 +134,9 @@ export default function App() {
           {/* Profile */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/change-password" element={<ChangePassword />} />
+
+          {/* System */}
+          <Route path="/system" element={<System />} />
 
           {/* Error Pages */}
           <Route path="/403" element={<Unauthorized />} />

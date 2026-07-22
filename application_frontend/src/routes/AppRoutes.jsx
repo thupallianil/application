@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Layouts
 import AdminLayout from "../layouts/AdminLayout";
@@ -12,6 +12,7 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 import Dashboard from "../pages/dashboard/Dashboard";
 
 // Settings
+import Settings from "../pages/settings/Settings";
 import General from "../pages/settings/General";
 import Business from "../pages/settings/Business";
 import Quotes from "../pages/settings/Quotes";
@@ -59,6 +60,9 @@ import TaxReport from "../pages/reports/TaxReport";
 import Profile from "../pages/profile/Profile";
 import ChangePassword from "../pages/profile/ChangePassword";
 
+// System
+import System from "../pages/system/System";
+
 // Errors
 import NotFound from "../pages/errors/NotFound";
 import Unauthorized from "../pages/errors/Unauthorized";
@@ -81,17 +85,20 @@ export default function AppRoutes() {
           <Route path="/dashboard" element={<Dashboard />} />
 
           {/* Settings */}
-          <Route path="/settings/general" element={<General />} />
-          <Route path="/settings/business" element={<Business />} />
-          <Route path="/settings/quotes" element={<Quotes />} />
-          <Route path="/settings/invoices" element={<Invoices />} />
-          <Route path="/settings/payments" element={<Payments />} />
-          <Route path="/settings/tax" element={<Tax />} />
-          <Route path="/settings/emails" element={<Emails />} />
-          <Route path="/settings/pdf" element={<Pdf />} />
-          <Route path="/settings/translate" element={<Translate />} />
-          <Route path="/settings/extras" element={<Extras />} />
-          <Route path="/settings/licenses" element={<Licenses />} />
+          <Route path="/settings" element={<Settings />}>
+            <Route index element={<Navigate to="general" replace />} />
+            <Route path="general" element={<General />} />
+            <Route path="business" element={<Business />} />
+            <Route path="quotes" element={<Quotes />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="payments" element={<Payments />} />
+            <Route path="tax" element={<Tax />} />
+            <Route path="emails" element={<Emails />} />
+            <Route path="pdf" element={<Pdf />} />
+            <Route path="translate" element={<Translate />} />
+            <Route path="extras" element={<Extras />} />
+            <Route path="licenses" element={<Licenses />} />
+          </Route>
 
           {/* Clients */}
           <Route path="/clients" element={<ClientList />} />
@@ -124,9 +131,10 @@ export default function AppRoutes() {
           <Route path="/reports/profit-loss" element={<ProfitLoss />} />
           <Route path="/reports/tax" element={<TaxReport />} />
 
-          {/* Profile */}
+          {/* Profile & System */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/system" element={<System />} />
 
           {/* Error Pages */}
           <Route path="/403" element={<Unauthorized />} />

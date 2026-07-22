@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import axios from 'axios';
+
+const API_URL = 'http://127.0.0.1:8001/api/settings/quotes/';
 
 export default function Quotes() {
 
@@ -10,6 +14,39 @@ export default function Quotes() {
     notes: "",
   });
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      const fetched = {};
+      for (const key in res.data) {
+        if (res.data[key] !== null) fetched[key] = res.data[key];
+      }
+      setQuote(prev => ({ ...prev, ...fetched }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await axios.put(API_URL, quote);
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save settings!");
+    }
+  };
+
+
   const handleChange = (e) => {
     setQuote({
       ...quote,
@@ -19,7 +56,7 @@ export default function Quotes() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(quote);
+    handleSave(e);
   };
 
   return (

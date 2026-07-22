@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const API_URL = 'http://127.0.0.1:8001/api/settings/tax/';
 
 export default function Tax() {
 
@@ -7,6 +11,39 @@ export default function Tax() {
     taxRate: "18",
     taxNumber: "",
   });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      const fetched = {};
+      for (const key in res.data) {
+        if (res.data[key] !== null) fetched[key] = res.data[key];
+      }
+      setTax(prev => ({ ...prev, ...fetched }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await axios.put(API_URL, tax);
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save settings!");
+    }
+  };
+
 
   const handleChange = (e) => {
     setTax({
@@ -17,8 +54,9 @@ export default function Tax() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(tax);
+    handleSave(e);
   };
+
 
   return (
     <div className="bg-white rounded-xl shadow p-8">

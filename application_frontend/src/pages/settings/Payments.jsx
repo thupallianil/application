@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const API_URL = 'http://127.0.0.1:8001/api/settings/payments/';
 
 export default function Payments() {
 
@@ -10,6 +14,39 @@ export default function Payments() {
     upi: "",
   });
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      const fetched = {};
+      for (const key in res.data) {
+        if (res.data[key] !== null) fetched[key] = res.data[key];
+      }
+      setPayment(prev => ({ ...prev, ...fetched }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await axios.put(API_URL, payment);
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save settings!");
+    }
+  };
+
+
   const handleChange = (e) => {
     setPayment({
       ...payment,
@@ -19,8 +56,9 @@ export default function Payments() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(payment);
+    handleSave(e);
   };
+
 
   return (
     <div className="bg-white rounded-xl shadow p-8">
@@ -36,6 +74,7 @@ export default function Payments() {
 
         <input
           name="bankName"
+          value={payment.bankName}
           placeholder="Bank Name"
           onChange={handleChange}
           className="border rounded-lg p-3"
@@ -43,6 +82,7 @@ export default function Payments() {
 
         <input
           name="accountName"
+          value={payment.accountName}
           placeholder="Account Holder"
           onChange={handleChange}
           className="border rounded-lg p-3"
@@ -50,6 +90,7 @@ export default function Payments() {
 
         <input
           name="accountNumber"
+          value={payment.accountNumber}
           placeholder="Account Number"
           onChange={handleChange}
           className="border rounded-lg p-3"
@@ -57,6 +98,7 @@ export default function Payments() {
 
         <input
           name="ifsc"
+          value={payment.ifsc}
           placeholder="IFSC Code"
           onChange={handleChange}
           className="border rounded-lg p-3"
@@ -64,6 +106,7 @@ export default function Payments() {
 
         <input
           name="upi"
+          value={payment.upi}
           placeholder="UPI ID"
           onChange={handleChange}
           className="border rounded-lg p-3 md:col-span-2"

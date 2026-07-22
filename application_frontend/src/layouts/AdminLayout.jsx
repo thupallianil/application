@@ -1,14 +1,17 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 
 export default function AdminLayout() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar />
+        <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         <main className="flex-1 p-6">
           <Outlet />
         </main>

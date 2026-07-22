@@ -1,81 +1,121 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from 'react-toastify';
 
 export default function EditClient() {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const [client, setClient] = useState({
-    name: "John",
-    email: "john@gmail.com",
-    phone: "9876543210",
-    company: "ABC Pvt Ltd",
-    address: "Hyderabad",
+  const [clientData, setClientData] = useState({
+    client: "",
+    email: "",
+    phone: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchClient = async () => {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8001/api/clients/${id}/`);
+        setClientData({
+          client: response.data.client || "",
+          email: response.data.email || "",
+          phone: response.data.phone || ""
+        });
+      } catch (err) {
+        console.error("Error fetching client", err);
+        toast.error("Failed to fetch client details.");
+        setError("Failed to fetch client details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClient();
+  }, [id]);
 
   const handleChange = (e) => {
-    setClient({
-      ...client,
+    setClientData({
+      ...clientData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(client);
+    setSaving(true);
+    try {
+      await axios.put(`http://127.0.0.1:8001/api/clients/${id}/`, clientData);
+      toast.success("Client updated successfully!");
+      setTimeout(() => navigate('/clients'), 1500);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update client!");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  return (
-    <div className="bg-white rounded-xl shadow p-8">
+  if (loading) return <div className="p-8">Loading client details...</div>;
 
+  return (
+    <div className="bg-white rounded-xl shadow p-8 max-w-2xl mt-4 ml-4">
       <h1 className="text-3xl font-bold mb-8">
         Edit Client
       </h1>
+
+      {error && <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>}
 
       <form
         onSubmit={handleSubmit}
         className="grid md:grid-cols-2 gap-6"
       >
+        <div className="md:col-span-2">
+          <label className="block text-sm font-bold text-gray-700 mb-1">Business/Client Name *</label>
+          <input
+            required
+            name="client"
+            value={clientData.client}
+            onChange={handleChange}
+            placeholder="Enter Client Name"
+            className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
 
-        <input
-          name="name"
-          value={client.name}
-          onChange={handleChange}
-          className="border p-3 rounded-lg"
-        />
+        <div className="md:col-span-2">
+          <label className="block text-sm font-bold text-gray-700 mb-1">E-mail *</label>
+          <input
+            required
+            type="email"
+            name="email"
+            value={clientData.email}
+            onChange={handleChange}
+            placeholder="Enter valid email"
+            className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
 
-        <input
-          name="email"
-          value={client.email}
-          onChange={handleChange}
-          className="border p-3 rounded-lg"
-        />
+        <div className="md:col-span-2">
+          <label className="block text-sm font-bold text-gray-700 mb-1">Phone Number *</label>
+          <input
+            required
+            name="phone"
+            value={clientData.phone}
+            onChange={handleChange}
+            placeholder="Enter phone number"
+            className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
 
-        <input
-          name="phone"
-          value={client.phone}
-          onChange={handleChange}
-          className="border p-3 rounded-lg"
-        />
-
-        <input
-          name="company"
-          value={client.company}
-          onChange={handleChange}
-          className="border p-3 rounded-lg"
-        />
-
-        <textarea
-          rows="4"
-          name="address"
-          value={client.address}
-          onChange={handleChange}
-          className="border rounded-lg p-3 md:col-span-2"
-        />
-
-        <button className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg md:col-span-2">
-          Update Client
+        <button
+          disabled={saving}
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg md:col-span-2 disabled:opacity-50 transition-colors"
+        >
+          {saving ? 'Updating...' : 'Update Client'}
         </button>
-
       </form>
-
     </div>
   );
 }
