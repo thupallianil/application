@@ -1,64 +1,89 @@
-import { FileText, User, Calendar, IndianRupee } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { FileText, User, IndianRupee } from "lucide-react";
 
 export default function QuoteDetails() {
-  const quote = {
-    number: "QT-1001",
-    client: "John Doe",
-    amount: "₹25,000",
-    status: "Pending",
-    date: "22 Jul 2026",
-    validTill: "21 Aug 2026",
-    notes: "Thank you for your business.",
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [quote, setQuote] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`http://127.0.0.1:8001/api/quotes/${id}/`)
+      .then(res => {
+        setQuote(res.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        toast.error("Failed to load quotation details.");
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) return <div className="p-8">Loading quotation details...</div>;
+  if (!quote) return <div className="p-8 text-red-600">Quote not found.</div>;
+
+  const statusColorMap = {
+    Accepted: "bg-green-100 text-green-700",
+    Pending: "bg-yellow-100 text-yellow-700",
+    Rejected: "bg-red-100 text-red-700",
   };
+  const statusColor = statusColorMap[quote.status] || "bg-gray-100 text-gray-700";
 
   return (
     <div className="bg-white p-8 rounded-xl shadow space-y-6">
-      <h1 className="text-3xl font-bold">Quotation Details</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Quotation Details</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate(`/quotes/edit/${id}`)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => navigate("/quotes")}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm font-medium"
+          >
+            Back
+          </button>
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="flex items-center gap-3">
-          <FileText className="text-blue-600" />
+          <FileText className="text-blue-600 shrink-0" />
           <div>
-            <p className="text-gray-500">Quote No</p>
-            <p className="font-semibold">{quote.number}</p>
+            <p className="text-gray-500 text-sm">Quote No</p>
+            <p className="font-semibold">{quote.quotation_id}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <User className="text-blue-600" />
+          <User className="text-blue-600 shrink-0" />
           <div>
-            <p className="text-gray-500">Client</p>
-            <p className="font-semibold">{quote.client}</p>
+            <p className="text-gray-500 text-sm">Client</p>
+            <p className="font-semibold">{quote.client_name || quote.client}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <IndianRupee className="text-blue-600" />
+          <IndianRupee className="text-blue-600 shrink-0" />
           <div>
-            <p className="text-gray-500">Amount</p>
+            <p className="text-gray-500 text-sm">Amount</p>
             <p className="font-semibold">{quote.amount}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Calendar className="text-blue-600" />
-          <div>
-            <p className="text-gray-500">Valid Till</p>
-            <p className="font-semibold">{quote.validTill}</p>
           </div>
         </div>
       </div>
 
       <div>
         <h2 className="font-semibold mb-2">Status</h2>
-        <span className="px-4 py-2 rounded-full bg-yellow-100 text-yellow-700">
+        <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusColor}`}>
           {quote.status}
         </span>
-      </div>
-
-      <div>
-        <h2 className="font-semibold mb-2">Notes</h2>
-        <p>{quote.notes}</p>
       </div>
     </div>
   );

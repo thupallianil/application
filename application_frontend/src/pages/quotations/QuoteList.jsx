@@ -6,7 +6,7 @@ import SearchBar from "../../components/SearchBar";
 import Table from "../../components/Table";
 import Pagination from "../../components/Pagination";
 
-const API_URL = "http://127.0.0.1:8001/api/quotations/";
+const API_URL = "http://127.0.0.1:8001/api/quotes/";
 
 export default function QuoteList() {
   const navigate = useNavigate();
@@ -48,21 +48,25 @@ export default function QuoteList() {
   };
 
   const handleEdit = (id) => {
-    navigate(`/quotations/edit/${id}`);
+    navigate(`/quotes/edit/${id}`);
   };
 
   const handleView = (id) => {
-    navigate(`/quotations/${id}`);
+    navigate(`/quotes/${id}`);
   };
 
   // Format data for Table
   const formattedData = data.map(item => ({
-    id: item.id, quote: item.quoteNumber || `QT-${item.id}`, client: item.clientName || item.client, amount: item.total || item.amount || "₹0", status: item.status || "Pending"
-  })).filter(item => 
-    Object.values(item).some(val => 
+    id: item.id, quote: item.quotation_id || `QT-${item.id}`, client: item.client_name || item.client, amount: item.amount || "₹0", status: item.status || "Pending"
+  })).filter(item =>
+    Object.values(item).some(val =>
       String(val).toLowerCase().includes(search.toLowerCase())
     )
   );
+
+  const ITEMS_PER_PAGE = 5;
+  const totalPages = Math.max(1, Math.ceil(formattedData.length / ITEMS_PER_PAGE));
+  const paginatedData = formattedData.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6 bg-[#f0f0f1] min-h-screen p-4 md:p-6">
@@ -70,7 +74,7 @@ export default function QuoteList() {
         <h1 className="text-3xl font-bold text-[#1d2327]">
           Quotes
         </h1>
-        <NavLink to="/quotations/add" className="border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 px-4 py-2 text-sm rounded cursor-pointer font-medium">
+        <NavLink to="/quotes/add" className="border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 px-4 py-2 text-sm rounded cursor-pointer font-medium">
           Add New Quote
         </NavLink>
       </div>
@@ -84,7 +88,7 @@ export default function QuoteList() {
 
       <Table
         columns={columns}
-        data={formattedData}
+        data={paginatedData}
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
@@ -92,7 +96,7 @@ export default function QuoteList() {
 
       <Pagination
         currentPage={page}
-        totalPages={5}
+        totalPages={totalPages}
         onPageChange={setPage}
       />
 

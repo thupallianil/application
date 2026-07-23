@@ -8,10 +8,10 @@ export default function EditQuote() {
   const navigate = useNavigate();
 
   const [clients, setClients] = useState([]);
-  const [quote_id, setQuoteId] = useState('');
+  const [quotation_id, setQuotationId] = useState('');
   const [client, setClient] = useState('');
   const [amount, setAmount] = useState('');
-  const [status, setStatus] = useState('Draft');
+  const [status, setStatus] = useState('Pending');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,10 +27,10 @@ export default function EditQuote() {
 
         setClients(clientsRes.data);
         const data = quoteRes.data;
-        setQuoteId(data.quote_id || '');
+        setQuotationId(data.quotation_id || '');
         setClient(data.client || '');
         setAmount(data.amount || '');
-        setStatus(data.status || 'Draft');
+        setStatus(data.status || 'Pending');
       } catch (err) {
         console.error(err);
         setError("Failed to fetch quote details.");
@@ -47,7 +47,7 @@ export default function EditQuote() {
     setSaving(true);
     setError(null);
 
-    const quoteData = { quote_id, client, amount, status };
+    const quoteData = { quotation_id, client, amount, status };
 
     try {
       await axios.put(`http://127.0.0.1:8001/api/quotes/${id}/`, quoteData);
@@ -76,8 +76,8 @@ export default function EditQuote() {
           <input
             type="text"
             required
-            value={quote_id}
-            onChange={(e) => setQuoteId(e.target.value)}
+            value={quotation_id}
+            onChange={(e) => setQuotationId(e.target.value)}
             placeholder="Enter Quote ID (e.g. QTE-1001)"
             className="w-full border border-gray-300 p-2 text-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-inner"
           />
@@ -99,9 +99,9 @@ export default function EditQuote() {
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Status</label>
                 <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full border border-gray-300 p-2 rounded text-sm focus:ring-blue-500">
-                  <option value="Draft">Draft</option>
-                  <option value="Sent">Sent</option>
+                  <option value="Pending">Pending</option>
                   <option value="Accepted">Accepted</option>
+                  <option value="Rejected">Rejected</option>
                 </select>
               </div>
             </div>

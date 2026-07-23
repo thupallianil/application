@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 export default function AddClient() {
   const [clientType, setClientType] = useState('existing');
@@ -29,6 +30,7 @@ export default function AddClient() {
       .then(response => {
         setLoading(false);
         setSuccess(true);
+        toast.success("Created successfully!");
         setTimeout(() => {
           navigate('/clients');
         }, 1500);

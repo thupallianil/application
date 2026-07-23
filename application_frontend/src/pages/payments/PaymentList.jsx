@@ -57,12 +57,16 @@ export default function PaymentList() {
 
   // Format data for Table
   const formattedData = data.map(item => ({
-    id: item.id, payment: item.paymentId || `PAY-${item.id}`, client: item.clientName || item.client, amount: item.amount || "₹0", date: item.date || item.created_at || "N/A"
-  })).filter(item => 
-    Object.values(item).some(val => 
+    id: item.id, payment: item.payment_id || `PAY-${item.id}`, client: item.client_name || item.client, amount: item.amount || "₹0", date: item.date || "N/A"
+  })).filter(item =>
+    Object.values(item).some(val =>
       String(val).toLowerCase().includes(search.toLowerCase())
     )
   );
+
+  const ITEMS_PER_PAGE = 5;
+  const totalPages = Math.max(1, Math.ceil(formattedData.length / ITEMS_PER_PAGE));
+  const paginatedData = formattedData.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6 bg-[#f0f0f1] min-h-screen p-4 md:p-6">
@@ -84,7 +88,7 @@ export default function PaymentList() {
 
       <Table
         columns={columns}
-        data={formattedData}
+        data={paginatedData}
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
@@ -92,7 +96,7 @@ export default function PaymentList() {
 
       <Pagination
         currentPage={page}
-        totalPages={5}
+        totalPages={totalPages}
         onPageChange={setPage}
       />
 

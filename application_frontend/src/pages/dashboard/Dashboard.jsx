@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from "react";
-import axios from 'axios';
+import api from "../../api/config";
 
 export default function Dashboard() {
   const [data, setData] = useState({
     clients: 0,
     invoices: 0,
     quotes: 0,
+    payments: 0,
     revenue: 0,
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [clientsRes, invoicesRes, quotesRes] = await Promise.all([
-          axios.get('http://127.0.0.1:8001/api/clients/'),
-          axios.get('http://127.0.0.1:8001/api/invoices/'),
-          axios.get('http://127.0.0.1:8001/api/quotes/'),
+        const [clientsRes, invoicesRes, quotesRes, paymentsRes] = await Promise.all([
+          api.get("/clients/"),
+          api.get("/invoices/"),
+          api.get("/quotes/"),
+          api.get("/payments/"),
         ]);
 
         const invoices = invoicesRes.data;
@@ -28,6 +30,7 @@ export default function Dashboard() {
           clients: clientsRes.data.length,
           invoices: invoices.length,
           quotes: quotesRes.data.length,
+          payments: paymentsRes.data.length,
           revenue: totalRevenue,
         });
       } catch (err) {
@@ -43,7 +46,7 @@ export default function Dashboard() {
       <div className="max-w-6xl">
         <h1 className="text-[23px] font-normal leading-[29px] text-[#1d2327] mb-6">Dashboard</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div className="bg-white border border-[#c3c4c7] p-4 shadow-sm">
             <h3 className="text-[#a7aaad] font-semibold text-[13px] uppercase tracking-wider mb-2">Total Revenue</h3>
             <p className="text-2xl font-bold text-[#1d2327]">₹{data.revenue.toFixed(2)}</p>
@@ -55,6 +58,10 @@ export default function Dashboard() {
           <div className="bg-white border border-[#c3c4c7] p-4 shadow-sm">
             <h3 className="text-[#a7aaad] font-semibold text-[13px] uppercase tracking-wider mb-2">Quotes</h3>
             <p className="text-2xl font-bold text-[#1d2327]">{data.quotes}</p>
+          </div>
+          <div className="bg-white border border-[#c3c4c7] p-4 shadow-sm">
+            <h3 className="text-[#a7aaad] font-semibold text-[13px] uppercase tracking-wider mb-2">Payments</h3>
+            <p className="text-2xl font-bold text-[#1d2327]">{data.payments}</p>
           </div>
           <div className="bg-white border border-[#c3c4c7] p-4 shadow-sm">
             <h3 className="text-[#a7aaad] font-semibold text-[13px] uppercase tracking-wider mb-2">Clients</h3>

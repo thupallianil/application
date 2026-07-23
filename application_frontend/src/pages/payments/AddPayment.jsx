@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 
 export default function AddPayment() {
   const [clients, setClients] = useState([]);
@@ -39,6 +40,7 @@ export default function AddPayment() {
       .then(() => {
         setLoading(false);
         setSuccess(true);
+        toast.success("Created successfully!");
         setTimeout(() => navigate('/payments'), 1500);
       })
       .catch(err => {

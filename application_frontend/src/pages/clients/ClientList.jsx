@@ -64,6 +64,10 @@ export default function ClientList() {
     )
   );
 
+  const ITEMS_PER_PAGE = 5;
+  const totalPages = Math.max(1, Math.ceil(formattedData.length / ITEMS_PER_PAGE));
+  const paginatedData = formattedData.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
   return (
     <div className="space-y-6 bg-[#f0f0f1] min-h-screen p-4 md:p-6">
       <div className="flex justify-between items-center mb-6">
@@ -84,7 +88,7 @@ export default function ClientList() {
 
       <Table
         columns={columns}
-        data={formattedData}
+        data={paginatedData}
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
@@ -92,7 +96,7 @@ export default function ClientList() {
 
       <Pagination
         currentPage={page}
-        totalPages={5}
+        totalPages={totalPages}
         onPageChange={setPage}
       />
 

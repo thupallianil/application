@@ -1,72 +1,89 @@
-import {
-  FileText,
-  User,
-  Calendar,
-  IndianRupee,
-  CheckCircle,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { FileText, User, IndianRupee, CheckCircle } from "lucide-react";
 
 export default function InvoiceDetails() {
-  const invoice = {
-    number: "INV-1001",
-    client: "John Doe",
-    amount: "₹20,000",
-    status: "Paid",
-    issueDate: "22 Jul 2026",
-    dueDate: "05 Aug 2026",
-    notes: "Payment received successfully.",
-  };
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [invoice, setInvoice] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`http://127.0.0.1:8001/api/invoices/${id}/`)
+      .then(res => {
+        setInvoice(res.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        toast.error("Failed to load invoice details.");
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) return <div className="p-8">Loading invoice details...</div>;
+  if (!invoice) return <div className="p-8 text-red-600">Invoice not found.</div>;
+
+  const statusColor = invoice.status === "Paid"
+    ? "bg-green-100 text-green-700"
+    : "bg-yellow-100 text-yellow-700";
 
   return (
     <div className="bg-white rounded-xl shadow p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Invoice Details</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Invoice Details</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate(`/invoices/edit/${id}`)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => navigate("/invoices")}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm font-medium"
+          >
+            Back
+          </button>
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-
         <div className="flex gap-3">
-          <FileText className="text-blue-600" />
+          <FileText className="text-blue-600 shrink-0" />
           <div>
-            <p className="text-gray-500">Invoice No</p>
-            <p className="font-semibold">{invoice.number}</p>
+            <p className="text-gray-500 text-sm">Invoice No</p>
+            <p className="font-semibold">{invoice.invoice}</p>
           </div>
         </div>
 
         <div className="flex gap-3">
-          <User className="text-blue-600" />
+          <User className="text-blue-600 shrink-0" />
           <div>
-            <p className="text-gray-500">Client</p>
-            <p className="font-semibold">{invoice.client}</p>
+            <p className="text-gray-500 text-sm">Client</p>
+            <p className="font-semibold">{invoice.client_name || invoice.client}</p>
           </div>
         </div>
 
         <div className="flex gap-3">
-          <IndianRupee className="text-blue-600" />
+          <IndianRupee className="text-blue-600 shrink-0" />
           <div>
-            <p className="text-gray-500">Amount</p>
+            <p className="text-gray-500 text-sm">Amount</p>
             <p className="font-semibold">{invoice.amount}</p>
           </div>
         </div>
 
         <div className="flex gap-3">
-          <Calendar className="text-blue-600" />
+          <CheckCircle className="text-blue-600 shrink-0" />
           <div>
-            <p className="text-gray-500">Due Date</p>
-            <p>{invoice.dueDate}</p>
+            <p className="text-gray-500 text-sm">Status</p>
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}>
+              {invoice.status}
+            </span>
           </div>
         </div>
-
-      </div>
-
-      <div className="flex items-center gap-3">
-        <CheckCircle className="text-green-600" />
-        <span className="px-4 py-2 rounded-full bg-green-100 text-green-700">
-          {invoice.status}
-        </span>
-      </div>
-
-      <div>
-        <h2 className="font-semibold mb-2">Notes</h2>
-        <p>{invoice.notes}</p>
       </div>
     </div>
   );
