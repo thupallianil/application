@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import api from "../../services/api";
 
 export default function AddPayment() {
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+
+  const [clients, setClients] = useState([]);
 
   const [payment, setPayment] = useState({
     payment_id: "",
@@ -17,11 +15,23 @@ export default function AddPayment() {
     method: "Cash",
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
   useEffect(() => {
-    axios.get('http://127.0.0.1:8001/api/clients/')
-      .then(res => setClients(res.data))
-      .catch(err => console.error(err));
+    fetchClients();
   }, []);
+
+  const fetchClients = async () => {
+    try {
+      const res = await api.get("/clients/");
+      setClients(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load clients.");
+    }
+  };
 
   const handleChange = (e) => {
     setPayment({
@@ -30,24 +40,32 @@ export default function AddPayment() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
     setError(null);
     setSuccess(false);
 
-    axios.post('http://127.0.0.1:8001/api/payments/', payment)
-      .then(() => {
-        setLoading(false);
-        setSuccess(true);
-        toast.success("Created successfully!");
-        setTimeout(() => navigate('/payments'), 1500);
-      })
-      .catch(err => {
-        setLoading(false);
-        console.error("Error adding payment", err);
-        setError("Failed to add payment. Please try again.");
-      });
+    try {
+      await api.post("/payments/", payment);
+
+      setLoading(false);
+      setSuccess(true);
+
+      toast.success("Payment created successfully!");
+
+      setTimeout(() => {
+        navigate("/payments");
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+
+      setLoading(false);
+
+      setError("Failed to add payment.");
+      toast.error("Failed to add payment.");
+    }
   };
 
   return (
@@ -57,8 +75,17 @@ export default function AddPayment() {
         Add Payment
       </h1>
 
-      {error && <div className="mb-4 text-red-600 font-medium">{error}</div>}
-      {success && <div className="mb-4 text-green-600 font-medium">Payment saved successfully! Redirecting...</div>}
+      {error && (
+        <div className="mb-4 text-red-600 font-medium">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 text-green-600 font-medium">
+          Payment saved successfully! Redirecting...
+        </div>
+      )}
 
       <form
         onSubmit={handleSubmit}
@@ -68,37 +95,45 @@ export default function AddPayment() {
         <input
           required
           name="payment_id"
-          placeholder="Payment ID (e.g. PAY-1001)"
-          onChange={handleChange}
           value={payment.payment_id}
+          onChange={handleChange}
+          placeholder="Payment ID (e.g. PAY-1001)"
           className="border rounded-lg p-3"
         />
 
         <select
           required
           name="client"
-          onChange={handleChange}
           value={payment.client}
+          onChange={handleChange}
           className="border rounded-lg p-3"
         >
           <option value="">Select Client</option>
-          {clients.map(c => <option key={c.id} value={c.id}>{c.client}</option>)}
+
+          {clients.map((client) => (
+            <option
+              key={client.id}
+              value={client.id}
+            >
+              {client.client}
+            </option>
+          ))}
         </select>
 
         <input
           required
           name="amount"
-          placeholder="Amount"
-          onChange={handleChange}
           value={payment.amount}
+          onChange={handleChange}
+          placeholder="Amount"
           className="border rounded-lg p-3"
         />
 
         <select
           required
           name="method"
-          onChange={handleChange}
           value={payment.method}
+          onChange={handleChange}
           className="border rounded-lg p-3"
         >
           <option value="Cash">Cash</option>
@@ -106,8 +141,12 @@ export default function AddPayment() {
           <option value="Credit Card">Credit Card</option>
         </select>
 
-        <button disabled={loading} className="bg-blue-600 text-white py-3 rounded-lg md:col-span-2 hover:bg-blue-700 disabled:opacity-50">
-          {loading ? 'Saving...' : 'Save Payment'}
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg md:col-span-2 disabled:opacity-50"
+        >
+          {loading ? "Saving..." : "Save Payment"}
         </button>
 
       </form>

@@ -1,78 +1,111 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../../services/api";
 
 export default function EditQuote() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [clients, setClients] = useState([]);
-  const [quotation_id, setQuotationId] = useState('');
-  const [client, setClient] = useState('');
-  const [amount, setAmount] = useState('');
-  const [status, setStatus] = useState('Pending');
+  const [quotation_id, setQuotationId] = useState("");
+  const [client, setClient] = useState("");
+  const [amount, setAmount] = useState("");
+  const [status, setStatus] = useState("Pending");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [clientsRes, quoteRes] = await Promise.all([
-          axios.get('http://127.0.0.1:8001/api/clients/'),
-          axios.get(`http://127.0.0.1:8001/api/quotes/${id}/`)
-        ]);
+    fetchQuote();
+  }, []);
 
-        setClients(clientsRes.data);
-        const data = quoteRes.data;
-        setQuotationId(data.quotation_id || '');
-        setClient(data.client || '');
-        setAmount(data.amount || '');
-        setStatus(data.status || 'Pending');
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch quote details.");
-        toast.error("Failed to fetch quote details.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [id]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-
-    const quoteData = { quotation_id, client, amount, status };
-
+  const fetchQuote = async () => {
     try {
-      await axios.put(`http://127.0.0.1:8001/api/quotes/${id}/`, quoteData);
-      toast.success("Quote updated successfully!");
-      setTimeout(() => navigate('/quotes'), 1500);
+      const [clientsRes, quoteRes] = await Promise.all([
+        api.get("/clients/"),
+        api.get(`/quotes/${id}/`)
+      ]);
+
+      setClients(clientsRes.data);
+
+      const data = quoteRes.data;
+
+      setQuotationId(data.quotation_id || "");
+      setClient(data.client || "");
+      setAmount(data.amount || "");
+      setStatus(data.status || "Pending");
+
     } catch (err) {
-      setSaving(false);
       console.error(err);
-      toast.error("Failed to update quote!");
-      setError("Failed to update quote.");
+      toast.error("Failed to fetch quotation.");
+      setError("Failed to fetch quotation.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <div className="p-8">Loading quote details...</div>;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await api.put(`/quotes/${id}/`, {
+        quotation_id,
+        client,
+        amount,
+        status,
+      });
+
+      toast.success("Quotation updated successfully!");
+
+      setTimeout(() => {
+        navigate("/quotes");
+      }, 1500);
+
+    } catch (err) {
+      console.error(err);
+
+      setSaving(false);
+
+      toast.error("Failed to update quotation.");
+      setError("Failed to update quotation.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        Loading quotation details...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1400px] mx-auto p-4 md:p-6 bg-[#f0f0f1] min-h-screen">
+
       <div className="flex justify-between items-end mb-4">
-        <h1 className="text-2xl font-normal text-[#1d2327]">Edit Quotation</h1>
+        <h1 className="text-2xl font-normal text-[#1d2327]">
+          Edit Quotation
+        </h1>
       </div>
 
-      {error && <div className="mb-4 bg-red-100 text-red-700 px-4 py-3 rounded">{error}</div>}
+      {error && (
+        <div className="mb-4 bg-red-100 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-5 items-start">
-        <form onSubmit={handleSubmit} className="flex-1 w-full space-y-4">
+
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 w-full space-y-4"
+        >
+
           <input
             type="text"
             required
@@ -82,38 +115,85 @@ export default function EditQuote() {
             className="w-full border border-gray-300 p-2 text-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-inner"
           />
 
-          <div className="border border-gray-300 bg-white mb-4 rounded-sm shadow-sm p-4">
-            <h3 className="font-bold mb-4">Quotation Details</h3>
+          <div className="border border-gray-300 bg-white rounded-sm shadow-sm p-4">
+
+            <h3 className="font-bold mb-4">
+              Quotation Details
+            </h3>
+
             <div className="grid grid-cols-2 gap-4">
+
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Select Client *</label>
-                <select required value={client} onChange={(e) => setClient(e.target.value)} className="w-full border border-gray-300 p-2 rounded text-sm focus:ring-blue-500">
-                  <option value="">Choose client...</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.client}</option>)}
+                <label className="block text-sm font-bold text-gray-700 mb-1">
+                  Select Client *
+                </label>
+
+                <select
+                  required
+                  value={client}
+                  onChange={(e) => setClient(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded"
+                >
+                  <option value="">Choose Client...</option>
+
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.client}
+                    </option>
+                  ))}
                 </select>
               </div>
+
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Amount (e.g. ₹500) *</label>
-                <input type="text" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border border-gray-300 p-2 rounded text-sm focus:ring-blue-500" />
+                <label className="block text-sm font-bold text-gray-700 mb-1">
+                  Amount *
+                </label>
+
+                <input
+                  type="text"
+                  required
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded"
+                />
               </div>
+
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Status</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full border border-gray-300 p-2 rounded text-sm focus:ring-blue-500">
+                <label className="block text-sm font-bold text-gray-700 mb-1">
+                  Status
+                </label>
+
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded"
+                >
                   <option value="Pending">Pending</option>
                   <option value="Accepted">Accepted</option>
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>
+
             </div>
 
             <div className="mt-6">
-              <button disabled={saving} type="submit" className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50">
-                {saving ? 'Updating...' : 'Update Quote'}
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded disabled:opacity-50"
+              >
+                {saving ? "Updating..." : "Update Quote"}
               </button>
+
             </div>
+
           </div>
+
         </form>
+
       </div>
+
     </div>
   );
 }
