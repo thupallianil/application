@@ -13,6 +13,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const settingsSubMenu = [
   { name: "General", path: "/settings/general" },
@@ -47,6 +48,7 @@ const menuItems = [
 
 export default function Sidebar({ isOpen }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -154,7 +156,13 @@ export default function Sidebar({ isOpen }) {
 
         {/* Logout */}
         <div className="border-t border-[#2c3338] shrink-0 mt-auto shadow-inner">
-          <button className="w-full flex items-center gap-3 px-4 py-4 text-[#f0f0f1] hover:bg-[#2c3338] hover:text-[#d63638] transition-colors text-[14px] font-semibold">
+          <button
+            onClick={() => {
+              localStorage.removeItem("auth_token");
+              navigate("/");
+            }}
+            className="w-full flex items-center gap-3 px-4 py-4 text-[#f0f0f1] hover:bg-[#2c3338] hover:text-[#d63638] transition-colors text-[14px] font-semibold"
+          >
             <LogOut size={18} className="text-[#a7aaad] group-hover:text-[#d63638]" />
             <span className="whitespace-nowrap">Logout</span>
           </button>

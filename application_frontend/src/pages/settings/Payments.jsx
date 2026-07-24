@@ -1,8 +1,8 @@
 import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from '../../services/api';
 
-const API_URL = 'http://127.0.0.1:8001/api/settings/payments/';
+const API_ENDPOINT = '/settings/payments/';
 
 export default function Payments() {
 
@@ -22,7 +22,7 @@ export default function Payments() {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get(API_URL);
+      const res = await api.get(API_ENDPOINT);
       const fetched = {};
       for (const key in res.data) {
         if (res.data[key] !== null) fetched[key] = res.data[key];
@@ -38,7 +38,7 @@ export default function Payments() {
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     try {
-      await axios.put(API_URL, payment);
+      await api.put(API_ENDPOINT, payment);
       toast.success("Settings saved successfully!");
     } catch (err) {
       console.error(err);

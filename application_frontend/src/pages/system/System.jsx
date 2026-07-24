@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { Monitor, Server, Database, Shield, RefreshCw, HardDrive, Clock, Activity, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -28,7 +28,7 @@ export default function System() {
   const fetchSystemInfo = async () => {
     setApiStatus('checking');
     try {
-      const res = await axios.get('http://127.0.0.1:8001/api/settings/system/');
+      const res = await api.get('/settings/system/');
       setSysInfo(res.data);
       setApiStatus('online');
     } catch (err) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../../services/api';
 import { toast } from "react-toastify";
 import { FileText, User, IndianRupee, CheckCircle } from "lucide-react";
 
@@ -11,7 +11,7 @@ export default function InvoiceDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:8001/api/invoices/${id}/`)
+    api.get(`/invoices/${id}/`)
       .then(res => {
         setInvoice(res.data);
         setLoading(false);

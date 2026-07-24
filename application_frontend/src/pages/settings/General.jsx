@@ -1,8 +1,8 @@
 import { toast } from 'react-toastify';
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
-const API_URL = 'http://127.0.0.1:8001/api/settings/general/';
+const API_ENDPOINT = '/settings/general/';
 
 const General = () => {
   const [formData, setFormData] = useState({
@@ -19,7 +19,7 @@ const General = () => {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get(API_URL);
+      const res = await api.get(API_ENDPOINT);
       const fetched = {};
       for (const key in res.data) {
         if (res.data[key] !== null) fetched[key] = res.data[key];
@@ -35,7 +35,7 @@ const General = () => {
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     try {
-      await axios.put(API_URL, formData);
+      await api.put(API_ENDPOINT, formData);
       toast.success("Settings saved successfully!");
     } catch (err) {
       console.error(err);

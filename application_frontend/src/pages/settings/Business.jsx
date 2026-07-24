@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify';
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
 const InfoIcon = () => (
   <svg className="w-5 h-5 mr-3 text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -8,7 +8,7 @@ const InfoIcon = () => (
   </svg>
 );
 
-const API_URL = 'http://127.0.0.1:8001/api/settings/business/';
+const API_ENDPOINT = '/settings/business/';
 
 export default function Business() {
   const [formData, setFormData] = useState({
@@ -27,7 +27,7 @@ export default function Business() {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get(API_URL);
+      const res = await api.get(API_ENDPOINT);
       const fetched = {};
       for (const key in res.data) {
         if (res.data[key] !== null) fetched[key] = res.data[key];
@@ -43,7 +43,7 @@ export default function Business() {
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     try {
-      await axios.put(API_URL, formData);
+      await api.put(API_ENDPOINT, formData);
       toast.success("Settings saved successfully!");
     } catch (err) {
       console.error(err);
@@ -113,7 +113,7 @@ export default function Business() {
       </div>
 
       <div className="mt-4">
-        <button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm font-medium transition-colors" onClick={handleSave}>
+        <button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm font-medium transition-colors">
           Save
         </button>
       </div>

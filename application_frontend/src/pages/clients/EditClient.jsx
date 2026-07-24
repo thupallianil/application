@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../../services/api';
 import { toast } from 'react-toastify';
 
 export default function EditClient() {
@@ -19,7 +19,7 @@ export default function EditClient() {
   useEffect(() => {
     const fetchClient = async () => {
       try {
-        const response = await axios.get(`http://127.0.0.1:8001/api/clients/${id}/`);
+        const response = await api.get(`/clients/${id}/`);
         setClientData({
           client: response.data.client || "",
           email: response.data.email || "",
@@ -47,7 +47,7 @@ export default function EditClient() {
     e.preventDefault();
     setSaving(true);
     try {
-      await axios.put(`http://127.0.0.1:8001/api/clients/${id}/`, clientData);
+      await api.put(`/clients/${id}/`, clientData);
       toast.success("Client updated successfully!");
       setTimeout(() => navigate('/clients'), 1500);
     } catch (err) {

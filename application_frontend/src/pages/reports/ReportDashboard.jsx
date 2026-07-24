@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from 'axios';
+import api from "../../services/api";
 
 export default function ReportDashboard() {
   const [stats, setStats] = useState({
@@ -13,9 +13,9 @@ export default function ReportDashboard() {
     const fetchStats = async () => {
       try {
         const [invoicesRes, paymentsRes, clientsRes] = await Promise.all([
-          axios.get('http://127.0.0.1:8001/api/invoices/'),
-          axios.get('http://127.0.0.1:8001/api/payments/'),
-          axios.get('http://127.0.0.1:8001/api/clients/')
+          api.get('/invoices/'),
+          api.get('/payments/'),
+          api.get('/clients/')
         ]);
 
         const invoices = invoicesRes.data;

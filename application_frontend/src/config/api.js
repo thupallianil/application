@@ -3,7 +3,7 @@
 // All API calls must use this base URL — never hardcode it.
 // ============================================================
 
-export const API_BASE = "http://127.0.0.1:8001/api";
+export const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8001/api";
 
 export const ENDPOINTS = {
     clients: `${API_BASE}/clients/`,

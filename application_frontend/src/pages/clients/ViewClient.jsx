@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../../services/api';
 import { toast } from "react-toastify";
 import { Mail, Phone, Building2 } from "lucide-react";
 
@@ -11,7 +11,7 @@ export default function ViewClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:8001/api/clients/${id}/`)
+    api.get(`/clients/${id}/`)
       .then(res => {
         setClient(res.data);
         setLoading(false);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -21,8 +21,8 @@ export default function EditInvoice() {
     const fetchData = async () => {
       try {
         const [clientsRes, invoiceRes] = await Promise.all([
-          axios.get('http://127.0.0.1:8001/api/clients/'),
-          axios.get(`http://127.0.0.1:8001/api/invoices/${id}/`)
+          api.get('/clients/'),
+          api.get(`/invoices/${id}/`)
         ]);
 
         setClients(clientsRes.data);
@@ -50,7 +50,7 @@ export default function EditInvoice() {
     const invoiceData = { invoice, client, amount, status };
 
     try {
-      await axios.put(`http://127.0.0.1:8001/api/invoices/${id}/`, invoiceData);
+      await api.put(`/invoices/${id}/`, invoiceData);
       toast.success("Invoice updated successfully!");
       setTimeout(() => navigate('/invoices'), 1500);
     } catch (err) {

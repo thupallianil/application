@@ -1,8 +1,8 @@
 import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from '../../services/api';
 
-const API_URL = 'http://127.0.0.1:8001/api/settings/tax/';
+const API_ENDPOINT = '/settings/tax/';
 
 export default function Tax() {
 
@@ -20,7 +20,7 @@ export default function Tax() {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get(API_URL);
+      const res = await api.get(API_ENDPOINT);
       const fetched = {};
       for (const key in res.data) {
         if (res.data[key] !== null) fetched[key] = res.data[key];
@@ -36,7 +36,7 @@ export default function Tax() {
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     try {
-      await axios.put(API_URL, tax);
+      await api.put(API_ENDPOINT, tax);
       toast.success("Settings saved successfully!");
     } catch (err) {
       console.error(err);

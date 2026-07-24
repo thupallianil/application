@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -15,7 +15,7 @@ export default function AddInvoice() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:8001/api/clients/')
+    api.get('/clients/')
       .then(res => setClients(res.data))
       .catch(err => console.error(err));
   }, []);
@@ -33,7 +33,7 @@ export default function AddInvoice() {
       status
     };
 
-    axios.post('http://127.0.0.1:8001/api/invoices/', invoiceData)
+    api.post('/invoices/', invoiceData)
       .then(() => {
         setLoading(false);
         setSuccess(true);
