@@ -1,11 +1,19 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // ── Auth Guard ──────────────────────────────────────────────
+  // If no token is stored, redirect to login page
+  const isLoggedIn = !!localStorage.getItem("auth_token");
+  if (!isLoggedIn) {
+    return <Navigate to="/" replace />;
+  }
+  // ────────────────────────────────────────────────────────────
 
   return (
     <div className="flex min-h-screen bg-gray-100">
