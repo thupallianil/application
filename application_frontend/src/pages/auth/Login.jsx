@@ -20,44 +20,38 @@ const Login = () => {
     }
 
     setLoading(true);
-
     try {
-      // Try API login first
       const res = await api.post("/auth/login/", { email, password });
-      if (res.data && (res.data.token || res.data.access || res.data.success)) {
-        // Store token if returned
-        if (res.data.token) localStorage.setItem("auth_token", res.data.token);
-        if (res.data.access) localStorage.setItem("auth_token", res.data.access);
-        toast.success("Login successful!");
+
+      if (res.data?.token) {
+        localStorage.setItem("auth_token", res.data.token);
+        localStorage.setItem("user_email", res.data.user?.email || email);
+        localStorage.setItem(
+          "user_name",
+          `${res.data.user?.first_name || ""} ${res.data.user?.last_name || ""}`.trim() ||
+          email.split("@")[0]
+        );
+        toast.success("Login successful! Welcome back.");
         navigate("/dashboard");
-        return;
+      } else {
+        toast.error("Login failed. Unexpected response from server.");
       }
     } catch (err) {
-      // If API auth endpoint not found (404) or server offline, fall back to demo login
       const status = err?.response?.status;
-      if (status === 404 || status === undefined || !err.response) {
-        // Backend offline or no auth endpoint — allow demo login
-        if (email === "admin@example.com" && password === "admin123") {
-          localStorage.setItem("auth_token", "demo_token");
-          toast.success("Logged in (demo mode)!");
-          navigate("/dashboard");
-          return;
-        } else {
-          toast.error("Invalid credentials. Use admin@example.com / admin123 for demo.");
-          setLoading(false);
-          return;
-        }
-      }
-      // 401 Unauthorized = wrong credentials
-      if (status === 401 || status === 400) {
-        toast.error("Invalid email or password.");
-        setLoading(false);
-        return;
-      }
-      toast.error("Login failed. Please try again.");
-    }
+      const msg = err?.response?.data?.error;
 
-    setLoading(false);
+      if (status === 401) {
+        toast.error(msg || "Invalid email or password.");
+      } else if (status === 400) {
+        toast.error(msg || "Please check your input.");
+      } else if (!err.response) {
+        toast.error("Cannot reach server. Please make sure the backend is running.");
+      } else {
+        toast.error(msg || "Login failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -174,8 +168,11 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
 
-          <p className="text-xs text-center text-gray-400 mt-2">
-            Demo: admin@example.com / admin123
+          <p className="text-sm text-center text-gray-500 mt-2">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-blue-600 font-medium hover:underline">
+              Sign up here
+            </Link>
           </p>
 
         </form>
