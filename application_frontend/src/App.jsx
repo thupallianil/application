@@ -8,6 +8,7 @@ import SettingsLayout from "./layouts/SettingsLayout";
 
 // Authentication
 import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 
 // Dashboard
@@ -69,6 +70,9 @@ import NotFound from "./pages/errors/NotFound";
 import Unauthorized from "./pages/errors/Unauthorized";
 import ServerError from "./pages/errors/ServerError";
 
+// Route Guard
+import AdminRoute from "./components/AdminRoute";
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -78,6 +82,7 @@ export default function App() {
         {/* Public */}
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
 
@@ -85,26 +90,26 @@ export default function App() {
         <Route element={<AdminLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
 
-          {/* Settings */}
+          {/* Settings - Admin only */}
           <Route element={<SettingsLayout />}>
-            <Route path="/settings/general" element={<General />} />
-            <Route path="/settings/business" element={<Business />} />
-            <Route path="/settings/quotes" element={<Quotes />} />
-            <Route path="/settings/invoices" element={<Invoices />} />
-            <Route path="/settings/payments" element={<Payments />} />
-            <Route path="/settings/tax" element={<Tax />} />
-            <Route path="/settings/emails" element={<Emails />} />
-            <Route path="/settings/pdf" element={<Pdf />} />
-            <Route path="/settings/translate" element={<Translate />} />
-            <Route path="/settings/extras" element={<Extras />} />
-            <Route path="/settings/licenses" element={<Licenses />} />
+            <Route path="/settings/general" element={<AdminRoute><General /></AdminRoute>} />
+            <Route path="/settings/business" element={<AdminRoute><Business /></AdminRoute>} />
+            <Route path="/settings/quotes" element={<AdminRoute><Quotes /></AdminRoute>} />
+            <Route path="/settings/invoices" element={<AdminRoute><Invoices /></AdminRoute>} />
+            <Route path="/settings/payments" element={<AdminRoute><Payments /></AdminRoute>} />
+            <Route path="/settings/tax" element={<AdminRoute><Tax /></AdminRoute>} />
+            <Route path="/settings/emails" element={<AdminRoute><Emails /></AdminRoute>} />
+            <Route path="/settings/pdf" element={<AdminRoute><Pdf /></AdminRoute>} />
+            <Route path="/settings/translate" element={<AdminRoute><Translate /></AdminRoute>} />
+            <Route path="/settings/extras" element={<AdminRoute><Extras /></AdminRoute>} />
+            <Route path="/settings/licenses" element={<AdminRoute><Licenses /></AdminRoute>} />
           </Route>
 
-          {/* Clients */}
-          <Route path="/clients" element={<ClientList />} />
-          <Route path="/clients/add" element={<AddClient />} />
-          <Route path="/clients/:id" element={<ViewClient />} />
-          <Route path="/clients/edit/:id" element={<EditClient />} />
+          {/* Clients - Admin only */}
+          <Route path="/clients" element={<AdminRoute><ClientList /></AdminRoute>} />
+          <Route path="/clients/add" element={<AdminRoute><AddClient /></AdminRoute>} />
+          <Route path="/clients/:id" element={<AdminRoute><ViewClient /></AdminRoute>} />
+          <Route path="/clients/edit/:id" element={<AdminRoute><EditClient /></AdminRoute>} />
 
           {/* Quotations */}
           <Route path="/quotes" element={<QuoteList />} />
@@ -124,19 +129,19 @@ export default function App() {
           <Route path="/payments/:id" element={<PaymentDetails />} />
           <Route path="/payments/edit/:id" element={<EditPayment />} />
 
-          {/* Reports */}
-          <Route path="/reports" element={<ReportDashboard />} />
-          <Route path="/reports/sales" element={<SalesReport />} />
-          <Route path="/reports/expenses" element={<ExpenseReport />} />
-          <Route path="/reports/profit-loss" element={<ProfitLoss />} />
-          <Route path="/reports/tax" element={<TaxReport />} />
+          {/* Reports - Admin only */}
+          <Route path="/reports" element={<AdminRoute><ReportDashboard /></AdminRoute>} />
+          <Route path="/reports/sales" element={<AdminRoute><SalesReport /></AdminRoute>} />
+          <Route path="/reports/expenses" element={<AdminRoute><ExpenseReport /></AdminRoute>} />
+          <Route path="/reports/profit-loss" element={<AdminRoute><ProfitLoss /></AdminRoute>} />
+          <Route path="/reports/tax" element={<AdminRoute><TaxReport /></AdminRoute>} />
 
-          {/* Profile */}
+          {/* Profile - Both */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/change-password" element={<ChangePassword />} />
 
-          {/* System */}
-          <Route path="/system" element={<System />} />
+          {/* System - Admin only */}
+          <Route path="/system" element={<AdminRoute><System /></AdminRoute>} />
 
           {/* Error Pages */}
           <Route path="/403" element={<Unauthorized />} />

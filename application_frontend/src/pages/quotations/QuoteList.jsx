@@ -5,20 +5,19 @@ import SearchBar from "../../components/SearchBar";
 import Table from "../../components/Table";
 import Pagination from "../../components/Pagination";
 import api from "../../services/api";
+import { useRole } from "../../utils/useRole";
 
 export default function QuoteList() {
   const navigate = useNavigate();
+  const role = useRole();
+  const userName = localStorage.getItem("user_name") || "";
+  const userEmail = localStorage.getItem("user_email") || "";
 
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const columns = [
-    "Quote No",
-    "Client",
-    "Amount",
-    "Status",
-  ];
+  const columns = ["Quote No", "Client", "Amount", "Status"];
 
   useEffect(() => {
     fetchData();
@@ -27,7 +26,22 @@ export default function QuoteList() {
   const fetchData = async () => {
     try {
       const res = await api.get("/quotes/");
-      setData(res.data);
+      let quotes = res.data;
+
+      // Filter to client's own records if not admin
+      if (role !== "admin") {
+        quotes = quotes.filter((q) => {
+          const name = (q.client_name || q.client || "").toLowerCase();
+          const email = (q.client_email || "").toLowerCase();
+          return (
+            name === userName.toLowerCase() ||
+            email === userEmail.toLowerCase() ||
+            (userName && name.includes(userName.split(" ")[0].toLowerCase()))
+          );
+        });
+      }
+
+      setData(quotes);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load Quotes");
@@ -35,14 +49,10 @@ export default function QuoteList() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this Quote?"))
-      return;
-
+    if (!window.confirm("Are you sure you want to delete this Quote?")) return;
     try {
       await api.delete(`/quotes/${id}/`);
-
       toast.success("Quote deleted successfully!");
-
       fetchData();
     } catch (error) {
       console.error(error);
@@ -56,6 +66,11 @@ export default function QuoteList() {
 
   const handleView = (id) => {
     navigate(`/quotes/${id}`);
+  };
+
+  const handleDownload = (id) => {
+    // Open details in new tab for printing/saving as PDF
+    window.open(`/quotes/${id}`, "_blank");
   };
 
   const formattedData = data
@@ -73,12 +88,7 @@ export default function QuoteList() {
     );
 
   const ITEMS_PER_PAGE = 5;
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(formattedData.length / ITEMS_PER_PAGE)
-  );
-
+  const totalPages = Math.max(1, Math.ceil(formattedData.length / ITEMS_PER_PAGE));
   const paginatedData = formattedData.slice(
     (page - 1) * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE
@@ -88,35 +98,36 @@ export default function QuoteList() {
     <div className="space-y-6 bg-[#f0f0f1] min-h-screen p-4 md:p-6">
 
       <div className="flex justify-between items-center mb-6">
-
         <h1 className="text-3xl font-bold text-[#1d2327]">
-          Quotes
+          {role === "admin" ? "Quotes" : "My Quotes"}
         </h1>
 
-        <NavLink
-          to="/quotes/add"
-          className="border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 px-4 py-2 text-sm rounded font-medium"
-        >
-          Add New Quote
-        </NavLink>
-
+        {role === "admin" && (
+          <NavLink
+            to="/quotes/add"
+            className="border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 px-4 py-2 text-sm rounded font-medium"
+          >
+            Add New Quote
+          </NavLink>
+        )}
       </div>
 
       <div className="flex justify-end bg-white p-4 shadow-sm border border-[#c3c4c7] rounded-t">
-
         <SearchBar
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
       </div>
 
       <Table
         columns={columns}
         data={paginatedData}
         onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={role === "admin" ? handleEdit : null}
+        onDelete={role === "admin" ? handleDelete : null}
+        onDownload={role !== "admin" ? handleDownload : null}
+        clientMode={role !== "admin"}
+        clientViewLabel="View"
       />
 
       <Pagination

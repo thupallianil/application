@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
 const settingsSubMenu = [
   { name: "General", path: "/settings/general" },
@@ -50,6 +51,28 @@ export default function Sidebar({ isOpen }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [businessName, setBusinessName] = useState("ULTRAKEY");
+
+  // Get user role from local storage
+  const userRole = localStorage.getItem("user_role") || "client";
+
+  // Filter menu items based on role
+  let filteredMenuItems = menuItems;
+  if (userRole !== "admin") {
+    // client sees limited options
+    const allowedClientPaths = ["/dashboard", "/quotes", "/invoices", "/payments"];
+    filteredMenuItems = menuItems.filter(item => allowedClientPaths.includes(item.path));
+
+    // rename items for client view
+    filteredMenuItems = filteredMenuItems.map(item => {
+      if (item.name === "Quotations") return { ...item, name: "My Quotes" };
+      if (item.name === "Invoices") return { ...item, name: "My Invoice" };
+      return item;
+    });
+
+    // Add profile
+    filteredMenuItems.push({ name: "Profile", icon: <Users size={18} />, path: "/profile", end: false });
+  }
 
   useEffect(() => {
     // Automatically open the settings dropdown if we are on a settings page
@@ -58,18 +81,38 @@ export default function Sidebar({ isOpen }) {
     }
   }, [location.pathname]);
 
+  useEffect(() => {
+    const fetchBusinessSettings = async () => {
+      try {
+        const res = await api.get('/settings/business/');
+        if (res.data.businessName) {
+          setBusinessName(res.data.businessName);
+        }
+      } catch (err) {
+        console.error("Error fetching business settings for sidebar", err);
+      }
+    };
+    fetchBusinessSettings();
+  }, []);
+
+  // Simple heuristic to split business name into primary and secondary parts for logo
+  const words = businessName.split(' ');
+  const primaryName = words.length > 0 ? words[0] : "Ultrakey";
+  const secondaryName = words.length > 1 ? words.slice(1).join(' ').toUpperCase() : "IT SOLUTIONS PVT LTD";
+  const initial = primaryName.charAt(0).toUpperCase();
+
   return (
     <aside className={`min-h-screen bg-[#1d2327] text-white flex flex-col flex-shrink-0 transition-all duration-300 ${isOpen ? 'w-56' : 'w-0 overflow-hidden'}`}>
       <div className="w-56 flex flex-col h-full">
         {/* Logo */}
         <div className="p-4 py-5 flex items-center justify-center border-b border-[#2c3338] bg-[#1d2327]">
-          <div className="flex gap-2 items-center text-left hover:text-[#72aee6] cursor-pointer transition-colors">
+          <div className="flex gap-2 items-center text-left hover:text-[#72aee6] cursor-pointer transition-colors max-w-full overflow-hidden">
             <div className="w-10 h-10 border-2 border-[#72aee6] rounded text-[#72aee6] flex items-center justify-center shrink-0">
-              <span className="font-bold text-xl">K</span>
+              <span className="font-bold text-xl">{initial}</span>
             </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[#f0f0f1] font-bold text-lg leading-none tracking-tight">Ultrakey</span>
-              <span className="text-[#a7aaad] text-[10px] leading-tight mt-0.5 whitespace-nowrap">IT SOLUTIONS PRIVATE LIMITED</span>
+            <div className="flex flex-col text-left overflow-hidden">
+              <span className="text-[#f0f0f1] font-bold text-lg leading-none tracking-tight truncate" title={primaryName}>{primaryName}</span>
+              <span className="text-[#a7aaad] text-[9px] leading-tight mt-0.5 truncate" title={secondaryName}>{secondaryName}</span>
             </div>
           </div>
         </div>
@@ -82,7 +125,7 @@ export default function Sidebar({ isOpen }) {
         {/* Menu */}
         <nav className="flex-1 w-full overflow-y-auto overflow-x-hidden sidebar-scroll">
           <ul className="flex flex-col w-full">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               const hasSubMenu = !!item.subMenu;
               const isActiveParent = location.pathname.startsWith(item.path);
 

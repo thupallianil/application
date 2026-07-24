@@ -33,12 +33,26 @@ export default function AddQuote() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Frontend validation
+    if (!quotation_id.trim()) {
+      toast.error("Please enter a Quote ID.");
+      return;
+    }
+    if (!client) {
+      toast.error("Please select a client.");
+      return;
+    }
+    if (!amount) {
+      toast.error("Please enter an amount.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false);
 
     const quoteData = {
-      quotation_id,
+      quotation_id: quotation_id.trim(),
       client,
       amount,
       status,
@@ -58,11 +72,26 @@ export default function AddQuote() {
 
     } catch (err) {
       console.error(err);
-
       setLoading(false);
 
-      setError("Failed to add quotation.");
-      toast.error("Failed to add quotation.");
+      // Show the real backend error message
+      const data = err?.response?.data;
+      if (data) {
+        const messages = [];
+        Object.entries(data).forEach(([field, errors]) => {
+          if (Array.isArray(errors)) {
+            errors.forEach(e => messages.push(`${field}: ${e}`));
+          } else if (typeof errors === "string") {
+            messages.push(errors);
+          }
+        });
+        const msg = messages.length > 0 ? messages[0] : "Failed to add quotation.";
+        setError(msg);
+        toast.error(msg);
+      } else {
+        setError("Cannot reach server. Make sure the backend is running.");
+        toast.error("Cannot reach server. Make sure the backend is running.");
+      }
     }
   };
 

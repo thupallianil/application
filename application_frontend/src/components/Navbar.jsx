@@ -11,6 +11,9 @@ const Navbar = ({ toggleSidebar }) => {
 
   const navigate = useNavigate();
 
+  const userName = localStorage.getItem("user_name") || "Admin User";
+  const userEmail = localStorage.getItem("user_email") || "admin@example.com";
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -120,10 +123,10 @@ const Navbar = ({ toggleSidebar }) => {
               />
               <div className="hidden md:block">
                 <h3 className="font-semibold text-gray-800 leading-tight">
-                  Admin User
+                  {userName}
                 </h3>
                 <p className="text-xs text-gray-500">
-                  admin@example.com
+                  {userEmail}
                 </p>
               </div>
             </div>
@@ -132,8 +135,8 @@ const Navbar = ({ toggleSidebar }) => {
             {profileOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
                 <div className="px-4 py-3 border-b border-gray-100 md:hidden">
-                  <p className="text-sm font-semibold text-gray-800">Admin User</p>
-                  <p className="text-xs text-gray-500 truncate">admin@example.com</p>
+                  <p className="text-sm font-semibold text-gray-800">{userName}</p>
+                  <p className="text-xs text-gray-500 truncate">{userEmail}</p>
                 </div>
 
                 <Link

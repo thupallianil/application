@@ -1,14 +1,21 @@
 import { toast } from 'react-toastify';
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Info, Save } from 'lucide-react';
 import api from '../../services/api';
 
-const InfoIcon = () => (
-  <svg className="w-5 h-5 mr-3 text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-  </svg>
+const API_ENDPOINT = '/settings/business/';
+
+const FieldRow = ({ label, hint, children }) => (
+  <div className="grid md:grid-cols-[200px_1fr] gap-4 items-start w-full py-3 border-b border-gray-100 last:border-b-0">
+    <label className="text-sm font-medium text-gray-700 pt-1.5">{label}</label>
+    <div className="flex flex-col max-w-xl">
+      {children}
+      {hint && <p className="text-xs text-gray-400 italic mt-1.5" dangerouslySetInnerHTML={{ __html: hint }} />}
+    </div>
+  </div>
 );
 
-const API_ENDPOINT = '/settings/business/';
+const inputCls = "border border-gray-300 rounded px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none w-full";
 
 export default function Business() {
   const [formData, setFormData] = useState({
@@ -20,10 +27,9 @@ export default function Business() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  useEffect(() => { fetchSettings(); }, []);
 
   const fetchSettings = async () => {
     try {
@@ -42,81 +48,67 @@ export default function Business() {
 
   const handleSave = async (e) => {
     if (e) e.preventDefault();
+    setIsSaving(true);
     try {
       await api.put(API_ENDPOINT, formData);
-      toast.success("Settings saved successfully!");
+      toast.success("Business settings saved successfully!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save settings!");
+      toast.error("Failed to save business settings!");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  if (loading) return <p className="p-4">Loading...</p>;
+  if (loading) return <div className="p-8 text-sm text-gray-500">Loading settings...</div>;
 
   return (
-    <div className="w-full">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Business Settings</h2>
+    <div>
+      <h2 className="text-lg font-bold text-gray-800 mb-1">Business Settings</h2>
 
-      <div className="bg-gray-50 p-4 rounded text-sm text-gray-700 flex items-start mb-8 border border-gray-200">
-        <InfoIcon />
-        <span>All of the Business Details below will be displayed on the Quotes & Invoices.</span>
+      <div className="flex items-start gap-2 mt-3 mb-6 bg-blue-50 border border-blue-200 rounded p-3 text-[13px] text-blue-700">
+        <Info size={16} className="shrink-0 mt-0.5" />
+        <span>All of the Business Details below will be displayed on the Quotes &amp; Invoices.</span>
       </div>
 
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-start gap-4 border-b border-gray-100 pb-6">
-          <label className="text-sm font-bold text-gray-700 md:w-1/4 pt-2">Logo</label>
-          <div className="md:w-3/4">
-            <div className="flex items-center gap-3">
-              <input type="text" name="logoUrl" value={formData.logoUrl} onChange={handleChange} className="border border-gray-300 rounded p-2 text-sm w-full max-w-md focus:ring-blue-500 focus:border-blue-500" />
-              <button className="border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded text-sm whitespace-nowrap">Add or upload File</button>
-            </div>
-            <span className="text-xs text-gray-500 italic mt-2 block">Logo of your business. If no logo is added, the name of your business will be used instead.</span>
-            <div className="mt-4 p-2 border border-gray-200 inline-block bg-gray-100/50">
-              <div className="w-56 h-16 flex items-center justify-center font-bold text-xl text-blue-900" style={{ backgroundImage: 'radial-gradient(#ccc 1px, transparent 0)', backgroundSize: '10px 10px' }}>
-                <span className="bg-white/80 px-2 rounded">Ultrakey</span>
-              </div>
+      <form onSubmit={handleSave}>
+        <FieldRow label="Logo" hint="Logo of your business. If no logo is added, the name of your business will be used instead.">
+          <div className="flex items-center gap-3">
+            <input type="text" name="logoUrl" value={formData.logoUrl} onChange={handleChange} className={inputCls} />
+            <button type="button" className="border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm whitespace-nowrap">Add or Upload File</button>
+          </div>
+          <div className="mt-3 p-2 border border-gray-200 inline-block bg-gray-50 rounded">
+            <div className="w-48 h-14 flex items-center justify-center font-bold text-lg text-blue-900" style={{ backgroundImage: 'radial-gradient(#ddd 1px, transparent 0)', backgroundSize: '10px 10px' }}>
+              <span className="bg-white/80 px-2 rounded">Ultrakey</span>
             </div>
           </div>
-        </div>
+        </FieldRow>
 
-        <div className="flex flex-col md:flex-row md:items-start gap-4 border-b border-gray-100 pb-6">
-          <label className="text-sm font-bold text-gray-700 md:w-1/4 pt-2">Business Name</label>
-          <div className="md:w-3/4">
-            <input type="text" name="businessName" value={formData.businessName} onChange={handleChange} className="border border-gray-300 rounded p-2 text-sm w-full max-w-md focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-        </div>
+        <FieldRow label="Business Name">
+          <input type="text" name="businessName" value={formData.businessName} onChange={handleChange} className={inputCls} />
+        </FieldRow>
 
-        <div className="flex flex-col md:flex-row md:items-start gap-4 border-b border-gray-100 pb-6">
-          <label className="text-sm font-bold text-gray-700 md:w-1/4 pt-2">Address</label>
-          <div className="md:w-3/4">
-            <textarea name="address" rows="4" value={formData.address} onChange={handleChange} className="border border-gray-300 rounded p-2 w-full max-w-md text-sm focus:ring-blue-500 focus:border-blue-500" />
-            <span className="text-xs text-gray-500 italic mt-2 block">Add your full address and format it anyway you like. Basic HTML is allowed.</span>
-          </div>
-        </div>
+        <FieldRow label="Address" hint="Add your full address and format it anyway you like. Basic HTML is allowed.">
+          <textarea name="address" rows="4" value={formData.address} onChange={handleChange} className={inputCls} />
+        </FieldRow>
 
-        <div className="flex flex-col md:flex-row md:items-start gap-4 border-b border-gray-100 pb-6">
-          <label className="text-sm font-bold text-gray-700 md:w-1/4 pt-2">Extra Business Info</label>
-          <div className="md:w-3/4">
-            <textarea name="extraInfo" rows="3" value={formData.extraInfo} onChange={handleChange} className="border border-gray-300 rounded p-2 w-full max-w-md text-sm focus:ring-blue-500 focus:border-blue-500 font-mono" />
-            <span className="text-xs text-gray-500 italic mt-2 block">Extra business info such as Business Number, phone number or email address and format it anyway you like. Basic HTML is allowed.<br />You can add your VAT number or ABN here.</span>
-          </div>
-        </div>
+        <FieldRow label="Extra Business Info" hint="Extra business info such as Business Number, phone number or email address. Basic HTML is allowed.<br>You can add your VAT number or ABN here.">
+          <textarea name="extraInfo" rows="3" value={formData.extraInfo} onChange={handleChange} className={`${inputCls} font-mono`} />
+        </FieldRow>
 
-        <div className="flex flex-col md:flex-row md:items-start gap-4 pb-6">
-          <label className="text-sm font-bold text-gray-700 md:w-1/4 pt-2">Website</label>
-          <div className="md:w-3/4">
-            <input type="text" name="website" value={formData.website} onChange={handleChange} className="border border-gray-300 rounded p-2 text-sm w-full max-w-md focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-        </div>
-      </div>
+        <FieldRow label="Website">
+          <input type="text" name="website" value={formData.website} onChange={handleChange} className={inputCls} />
+        </FieldRow>
 
-      <div className="mt-4">
-        <button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm font-medium transition-colors">
-          Save
-        </button>
-      </div>
+        <div className="flex justify-start pt-6 pb-2">
+          <button type="submit" disabled={isSaving} className="bg-[#2271b1] hover:bg-[#135e96] text-white px-5 py-2 rounded text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50">
+            <Save size={16} />
+            {isSaving ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

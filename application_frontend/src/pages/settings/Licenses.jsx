@@ -1,11 +1,23 @@
 import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
+import { Info, ShieldCheck, CheckCircle2, XCircle, Save } from "lucide-react";
 import api from '../../services/api';
 
 const API_ENDPOINT = '/settings/licenses/';
 
-export default function Licenses() {
+const FieldRow = ({ label, hint, children }) => (
+  <div className="grid md:grid-cols-[200px_1fr] gap-4 items-start w-full py-3 border-b border-gray-100 last:border-b-0">
+    <label className="text-sm font-medium text-gray-700 pt-1.5">{label}</label>
+    <div className="flex flex-col max-w-xl">
+      {children}
+      {hint && <p className="text-xs text-gray-400 italic mt-1.5">{hint}</p>}
+    </div>
+  </div>
+);
 
+const inputCls = "border border-gray-300 rounded px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none w-full";
+
+export default function Licenses() {
   const [license, setLicense] = useState({
     company: "",
     purchaseCode: "",
@@ -13,14 +25,14 @@ export default function Licenses() {
     expiry: "",
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  useEffect(() => { fetchSettings(); }, []);
 
   const fetchSettings = async () => {
     try {
+      setLoading(true);
       const res = await api.get(API_ENDPOINT);
       const fetched = {};
       for (const key in res.data) {
@@ -36,79 +48,75 @@ export default function Licenses() {
 
   const handleSave = async (e) => {
     if (e) e.preventDefault();
+    setIsSaving(true);
     try {
       await api.put(API_ENDPOINT, license);
-      toast.success("Settings saved successfully!");
+      toast.success("License saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save settings!");
+      toast.error("Failed to save license!");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-
   const handleChange = (e) => {
-    setLicense({
-      ...license,
-      [e.target.name]: e.target.value,
-    });
+    setLicense({ ...license, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    handleSave(e);
-  };
+  const isActive = license.licenseKey && license.expiry;
 
+  if (loading) return <div className="p-8 text-sm text-gray-500">Loading settings...</div>;
 
   return (
-    <div className="bg-white rounded-xl shadow p-8">
+    <div>
+      <h2 className="text-lg font-bold text-gray-800 mb-1">License Settings</h2>
 
-      <h1 className="text-3xl font-bold mb-8">
-        License Settings
-      </h1>
+      <div className="flex items-start gap-2 mt-3 mb-6 bg-blue-50 border border-blue-200 rounded p-3 text-[13px] text-blue-700">
+        <Info size={16} className="shrink-0 mt-0.5" />
+        <span>Manage your software license and activation details.</span>
+      </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid md:grid-cols-2 gap-6"
-      >
+      {/* License Status Card */}
+      <div className={`flex items-center gap-4 p-4 rounded-lg mb-6 border ${isActive ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+        {isActive
+          ? <CheckCircle2 className="text-green-600 shrink-0" size={22} />
+          : <XCircle className="text-yellow-600 shrink-0" size={22} />
+        }
+        <div>
+          <p className={`font-semibold text-sm ${isActive ? 'text-green-800' : 'text-yellow-800'}`}>
+            {isActive ? "License Active" : "License Not Configured"}
+          </p>
+          <p className={`text-xs ${isActive ? 'text-green-600' : 'text-yellow-600'}`}>
+            {isActive ? `Expires: ${license.expiry}` : "Please enter your license details below."}
+          </p>
+        </div>
+      </div>
 
-        <input
-          name="company"
-          value={license.company}
-          placeholder="Company Name"
-          onChange={handleChange}
-          className="border rounded-lg p-3"
-        />
+      <form onSubmit={handleSave}>
+        <FieldRow label="Company Name" hint="The company name associated with this license.">
+          <input type="text" name="company" value={license.company} onChange={handleChange} placeholder="e.g. Ultrakey IT Solutions Pvt. Ltd." className={inputCls} />
+        </FieldRow>
 
-        <input
-          name="purchaseCode"
-          value={license.purchaseCode}
-          placeholder="Purchase Code"
-          onChange={handleChange}
-          className="border rounded-lg p-3"
-        />
+        <FieldRow label="Purchase Code" hint="The purchase code received after buying the product.">
+          <input type="text" name="purchaseCode" value={license.purchaseCode} onChange={handleChange} placeholder="e.g. abc123-def456-..." className={`${inputCls} font-mono text-xs`} />
+        </FieldRow>
 
-        <input
-          name="licenseKey"
-          value={license.licenseKey}
-          placeholder="License Key"
-          onChange={handleChange}
-          className="border rounded-lg p-3 md:col-span-2"
-        />
+        <FieldRow label="License Key" hint="Your unique license key for activation.">
+          <input type="text" name="licenseKey" value={license.licenseKey} onChange={handleChange} placeholder="e.g. XXXX-XXXX-XXXX-XXXX" className={`${inputCls} font-mono text-xs`} />
+        </FieldRow>
 
-        <input
-          type="date"
-          name="expiry"
-          value={license.expiry}
-          onChange={handleChange}
-          className="border rounded-lg p-3 md:col-span-2"
-        />
+        <FieldRow label="License Expiry Date" hint="The date on which the license expires and must be renewed.">
+          <input type="date" name="expiry" value={license.expiry} onChange={handleChange} className={inputCls} style={{ width: "200px" }} />
+        </FieldRow>
 
-        <button className="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg md:col-span-2">
-          Save License
-        </button>
-
+        <div className="flex justify-start pt-6 pb-2">
+          <button type="submit" disabled={isSaving} className="bg-[#2271b1] hover:bg-[#135e96] text-white px-5 py-2 rounded text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50">
+            <Save size={16} />
+            {isSaving ? "Saving..." : "Save"}
+          </button>
+        </div>
       </form>
-
     </div>
   );
 }

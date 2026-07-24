@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ShieldCheck, Users, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../services/api";
@@ -8,6 +8,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("admin");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -26,11 +27,10 @@ const Login = () => {
       if (res.data?.token) {
         localStorage.setItem("auth_token", res.data.token);
         localStorage.setItem("user_email", res.data.user?.email || email);
-        localStorage.setItem(
-          "user_name",
-          `${res.data.user?.first_name || ""} ${res.data.user?.last_name || ""}`.trim() ||
-          email.split("@")[0]
-        );
+        const fullName = `${res.data.user?.first_name || ""} ${res.data.user?.last_name || ""}`.trim() || email.split("@")[0];
+        localStorage.setItem("user_name", fullName);
+        // Use the role the user selected on the login page (admin card / client card)
+        localStorage.setItem("user_role", role);
         toast.success("Login successful! Welcome back.");
         navigate("/dashboard");
       } else {
@@ -55,33 +55,79 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center p-6">
+    <div className="min-h-screen bg-[#f8f9fa] flex justify-center items-center p-6">
 
-      <div className="bg-white shadow-xl rounded-xl w-full max-w-md p-8">
+      <div className="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl w-full max-w-lg p-8 px-10">
 
-        <h1 className="text-3xl font-bold text-center text-blue-600">
-          Invoice Management
+        <h1 className="text-2xl font-bold text-center text-slate-900">
+          Login to Your Account
         </h1>
 
-        <p className="text-center text-gray-500 mt-2">
-          Login to your account
+        <p className="text-center text-sm text-gray-500 mt-2">
+          Choose your role and login to access your dashboard
         </p>
 
         <form
           onSubmit={handleSubmit}
-          className="mt-8 space-y-5"
+          className="mt-6 space-y-5"
         >
+
+          <div className="text-center mb-6">
+            <span className="text-sm font-semibold text-gray-500 uppercase tracking-widest">Login As</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Admin Card */}
+            <div
+              onClick={() => setRole("admin")}
+              className={`relative cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center justify-center transition-all ${role === "admin"
+                ? "border-indigo-600 bg-indigo-50/50"
+                : "border-gray-100 hover:border-gray-200"
+                }`}
+            >
+              {role === "admin" && (
+                <div className="absolute top-2 right-2 text-indigo-600">
+                  <CheckCircle2 size={18} fill="currentColor" className="text-white" />
+                </div>
+              )}
+              <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mb-2">
+                <ShieldCheck size={24} />
+              </div>
+              <h3 className="font-bold text-gray-900">Admin</h3>
+              <p className="text-[10px] text-center text-gray-500 mt-1 leading-tight">Access admin panel and manage everything</p>
+            </div>
+
+            {/* Client Card */}
+            <div
+              onClick={() => setRole("client")}
+              className={`relative cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center justify-center transition-all ${role === "client"
+                ? "border-green-500 bg-green-50/50"
+                : "border-gray-100 hover:border-gray-200"
+                }`}
+            >
+              {role === "client" && (
+                <div className="absolute top-2 right-2 text-green-500">
+                  <CheckCircle2 size={18} fill="currentColor" className="text-white" />
+                </div>
+              )}
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2">
+                <Users size={24} />
+              </div>
+              <h3 className="font-bold text-gray-900">Client</h3>
+              <p className="text-[10px] text-center text-gray-500 mt-1 leading-tight">Access your account and manage your services</p>
+            </div>
+          </div>
 
           <div>
 
-            <label className="block mb-2 font-medium">
-              Email
+            <label className="block mb-2 font-semibold text-sm text-gray-700">
+              Email / Username
             </label>
 
             <div className="relative">
 
               <Mail
-                className="absolute left-3 top-3 text-gray-400"
+                className="absolute left-3.5 top-3.5 text-gray-400"
                 size={18}
               />
 
@@ -163,9 +209,9 @@ const Login = () => {
             id="login-submit"
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-3 rounded-lg font-semibold transition-colors"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white py-3 rounded-lg font-semibold transition-colors flex justify-center items-center gap-2"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Signing in..." : "Sign in"}
           </button>
 
           <p className="text-sm text-center text-gray-500 mt-2">
