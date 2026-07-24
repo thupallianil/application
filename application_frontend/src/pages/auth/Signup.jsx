@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../services/api";
@@ -11,8 +11,8 @@ const Signup = () => {
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
-        first_name: "",
-        last_name: "",
+        full_name: "",
+        mobile: "",
         email: "",
         password: "",
         password2: "",
@@ -25,7 +25,7 @@ const Signup = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!form.first_name || !form.email || !form.password || !form.password2) {
+        if (!form.full_name || !form.email || !form.password || !form.password2) {
             toast.error("Please fill in all required fields.");
             return;
         }
@@ -40,24 +40,29 @@ const Signup = () => {
             return;
         }
 
+        const [first_name, ...rest] = form.full_name.trim().split(" ");
+        const last_name = rest.join(" ");
+
         setLoading(true);
         try {
-            const res = await api.post("/auth/register/", form);
+            const res = await api.post("/auth/register/", {
+                first_name,
+                last_name,
+                email: form.email,
+                password: form.password,
+                password2: form.password2,
+            });
+
             if (res.data?.token) {
                 localStorage.setItem("auth_token", res.data.token);
                 localStorage.setItem("user_email", res.data.user?.email || form.email);
-                localStorage.setItem(
-                    "user_name",
-                    `${res.data.user?.first_name || ""} ${res.data.user?.last_name || ""}`.trim() ||
-                    form.email.split("@")[0]
-                );
+                localStorage.setItem("user_name", form.full_name);
             }
             toast.success("Account created! Welcome.");
             navigate("/dashboard");
         } catch (err) {
             const data = err?.response?.data;
             if (data) {
-                // Show first backend validation error
                 const firstError = Object.values(data)[0];
                 toast.error(Array.isArray(firstError) ? firstError[0] : firstError);
             } else {
@@ -69,142 +74,219 @@ const Signup = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex justify-center items-center p-6">
-            <div className="bg-white shadow-xl rounded-xl w-full max-w-md p-8">
+        <div style={styles.page}>
+            <div style={styles.card}>
+                <h2 style={styles.title}>Sign up</h2>
 
-                <h1 className="text-3xl font-bold text-center text-blue-600">
-                    Invoice Management
-                </h1>
+                <form onSubmit={handleSubmit} style={styles.form}>
 
-                <p className="text-center text-gray-500 mt-2">
-                    Create your account
-                </p>
+                    {/* Full Name */}
+                    <div style={styles.inputWrapper}>
+                        <span style={styles.icon}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                        </span>
+                        <input
+                            id="signup-full-name"
+                            type="text"
+                            name="full_name"
+                            placeholder="Full Name"
+                            value={form.full_name}
+                            onChange={handleChange}
+                            style={styles.input}
+                            required
+                        />
+                    </div>
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-
-                    {/* Name Row */}
-                    <div className="flex gap-3">
-                        <div className="flex-1">
-                            <label className="block mb-1 font-medium text-sm">First Name *</label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-3 text-gray-400" size={16} />
-                                <input
-                                    id="signup-first-name"
-                                    type="text"
-                                    name="first_name"
-                                    placeholder="First name"
-                                    value={form.first_name}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-lg py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="flex-1">
-                            <label className="block mb-1 font-medium text-sm">Last Name</label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-3 text-gray-400" size={16} />
-                                <input
-                                    id="signup-last-name"
-                                    type="text"
-                                    name="last_name"
-                                    placeholder="Last name"
-                                    value={form.last_name}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-lg py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                />
-                            </div>
-                        </div>
+                    {/* Mobile Number */}
+                    <div style={styles.inputWrapper}>
+                        <span style={styles.icon}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12.01" y2="18" /></svg>
+                        </span>
+                        <input
+                            id="signup-mobile"
+                            type="tel"
+                            name="mobile"
+                            placeholder="Mobile Number"
+                            value={form.mobile}
+                            onChange={handleChange}
+                            style={styles.input}
+                        />
                     </div>
 
                     {/* Email */}
-                    <div>
-                        <label className="block mb-1 font-medium text-sm">Email *</label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-3 text-gray-400" size={16} />
-                            <input
-                                id="signup-email"
-                                type="email"
-                                name="email"
-                                placeholder="Enter your email"
-                                value={form.email}
-                                onChange={handleChange}
-                                className="w-full border rounded-lg py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                required
-                            />
-                        </div>
+                    <div style={styles.inputWrapper}>
+                        <span style={styles.icon}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                        </span>
+                        <input
+                            id="signup-email"
+                            type="email"
+                            name="email"
+                            placeholder="Email"
+                            value={form.email}
+                            onChange={handleChange}
+                            style={styles.input}
+                            required
+                        />
                     </div>
 
                     {/* Password */}
-                    <div>
-                        <label className="block mb-1 font-medium text-sm">Password *</label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-3 text-gray-400" size={16} />
-                            <input
-                                id="signup-password"
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                placeholder="Min 6 characters"
-                                value={form.password}
-                                onChange={handleChange}
-                                className="w-full border rounded-lg py-2.5 pl-9 pr-10 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                required
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-3"
-                            >
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                        </div>
+                    <div style={styles.inputWrapper}>
+                        <span style={styles.icon}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                        </span>
+                        <input
+                            id="signup-password"
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="Password"
+                            value={form.password}
+                            onChange={handleChange}
+                            style={styles.input}
+                            required
+                        />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                            {showPassword
+                                ? <EyeOff size={15} color="#aaa" />
+                                : <Eye size={15} color="#aaa" />}
+                        </button>
                     </div>
 
                     {/* Confirm Password */}
-                    <div>
-                        <label className="block mb-1 font-medium text-sm">Confirm Password *</label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-3 text-gray-400" size={16} />
-                            <input
-                                id="signup-password2"
-                                type={showPassword2 ? "text" : "password"}
-                                name="password2"
-                                placeholder="Repeat your password"
-                                value={form.password2}
-                                onChange={handleChange}
-                                className="w-full border rounded-lg py-2.5 pl-9 pr-10 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                required
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword2(!showPassword2)}
-                                className="absolute right-3 top-3"
-                            >
-                                {showPassword2 ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                        </div>
+                    <div style={styles.inputWrapper}>
+                        <span style={styles.icon}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                        </span>
+                        <input
+                            id="signup-password2"
+                            type={showPassword2 ? "text" : "password"}
+                            name="password2"
+                            placeholder="Password"
+                            value={form.password2}
+                            onChange={handleChange}
+                            style={styles.input}
+                            required
+                        />
+                        <button type="button" onClick={() => setShowPassword2(!showPassword2)} style={styles.eyeBtn}>
+                            {showPassword2
+                                ? <EyeOff size={15} color="#aaa" />
+                                : <Eye size={15} color="#aaa" />}
+                        </button>
                     </div>
 
+                    {/* Submit */}
                     <button
                         id="signup-submit"
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-3 rounded-lg font-semibold transition-colors mt-2"
+                        style={{
+                            ...styles.submitBtn,
+                            opacity: loading ? 0.7 : 1,
+                            cursor: loading ? "not-allowed" : "pointer",
+                        }}
                     >
-                        {loading ? "Creating Account..." : "Create Account"}
+                        {loading ? "SIGNING UP..." : "SIGN UP"}
                     </button>
 
-                    <p className="text-sm text-center text-gray-500 mt-2">
+                    <p style={styles.loginLink}>
                         Already have an account?{" "}
-                        <Link to="/" className="text-blue-600 font-medium hover:underline">
-                            Login here
-                        </Link>
+                        <Link to="/" style={styles.link}>Login</Link>
                     </p>
 
                 </form>
             </div>
         </div>
     );
+};
+
+const styles = {
+    page: {
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f0f2f5",
+        padding: "24px",
+    },
+    card: {
+        background: "#fff",
+        borderRadius: "16px",
+        padding: "36px 32px",
+        width: "100%",
+        maxWidth: "360px",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
+    },
+    title: {
+        fontSize: "24px",
+        fontWeight: "700",
+        color: "#1a1a2e",
+        marginBottom: "24px",
+        textAlign: "left",
+    },
+    form: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "14px",
+    },
+    inputWrapper: {
+        display: "flex",
+        alignItems: "center",
+        background: "#f5f6fa",
+        border: "1.5px solid #e8e8e8",
+        borderRadius: "8px",
+        padding: "0 12px",
+        height: "46px",
+        position: "relative",
+    },
+    icon: {
+        display: "flex",
+        alignItems: "center",
+        marginRight: "10px",
+        flexShrink: 0,
+    },
+    input: {
+        flex: 1,
+        border: "none",
+        background: "transparent",
+        outline: "none",
+        fontSize: "14px",
+        color: "#333",
+        height: "100%",
+    },
+    eyeBtn: {
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        padding: "0",
+        marginLeft: "6px",
+        flexShrink: 0,
+    },
+    submitBtn: {
+        marginTop: "6px",
+        background: "#3b5bdb",
+        color: "#fff",
+        border: "none",
+        borderRadius: "8px",
+        height: "46px",
+        fontSize: "13px",
+        fontWeight: "700",
+        letterSpacing: "1px",
+        cursor: "pointer",
+        transition: "background 0.2s",
+    },
+    loginLink: {
+        textAlign: "center",
+        fontSize: "13px",
+        color: "#888",
+        marginTop: "4px",
+    },
+    link: {
+        color: "#3b5bdb",
+        fontWeight: "600",
+        textDecoration: "none",
+    },
 };
 
 export default Signup;
