@@ -1,17 +1,35 @@
 import { useState } from "react";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 
+// Routes that ONLY admins can visit
+const ADMIN_ONLY_PATHS = [
+  "/clients",
+  "/settings",
+  "/reports",
+  "/system",
+];
+
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const location = useLocation();
 
   // ── Auth Guard ──────────────────────────────────────────────
-  // If no token is stored, redirect to login page
   const isLoggedIn = !!localStorage.getItem("auth_token");
   if (!isLoggedIn) {
     return <Navigate to="/" replace />;
+  }
+
+  // ── Role Guard ──────────────────────────────────────────────
+  // If a client tries to visit an admin-only page, redirect to dashboard
+  const userRole = localStorage.getItem("user_role") || "client";
+  const isAdminOnly = ADMIN_ONLY_PATHS.some((p) =>
+    location.pathname.startsWith(p)
+  );
+  if (userRole !== "admin" && isAdminOnly) {
+    return <Navigate to="/dashboard" replace />;
   }
   // ────────────────────────────────────────────────────────────
 

@@ -202,6 +202,9 @@ export default function Sidebar({ isOpen }) {
           <button
             onClick={() => {
               localStorage.removeItem("auth_token");
+              localStorage.removeItem("user_email");
+              localStorage.removeItem("user_name");
+              localStorage.removeItem("user_role");
               navigate("/");
             }}
             className="w-full flex items-center gap-3 px-4 py-4 text-[#f0f0f1] hover:bg-[#2c3338] hover:text-[#d63638] transition-colors text-[14px] font-semibold"

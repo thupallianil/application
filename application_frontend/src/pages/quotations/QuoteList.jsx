@@ -10,8 +10,6 @@ import { useRole } from "../../utils/useRole";
 export default function QuoteList() {
   const navigate = useNavigate();
   const role = useRole();
-  const userName = localStorage.getItem("user_name") || "";
-  const userEmail = localStorage.getItem("user_email") || "";
 
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
@@ -25,23 +23,10 @@ export default function QuoteList() {
 
   const fetchData = async () => {
     try {
-      const res = await api.get("/quotes/");
-      let quotes = res.data;
-
-      // Filter to client's own records if not admin
-      if (role !== "admin") {
-        quotes = quotes.filter((q) => {
-          const name = (q.client_name || q.client || "").toLowerCase();
-          const email = (q.client_email || "").toLowerCase();
-          return (
-            name === userName.toLowerCase() ||
-            email === userEmail.toLowerCase() ||
-            (userName && name.includes(userName.split(" ")[0].toLowerCase()))
-          );
-        });
-      }
-
-      setData(quotes);
+      // Pass ?role=client so backend filters to this user's records only
+      const params = role !== "admin" ? { role: "client" } : {};
+      const res = await api.get("/quotes/", { params });
+      setData(res.data);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load Quotes");

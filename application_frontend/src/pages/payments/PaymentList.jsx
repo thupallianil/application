@@ -10,8 +10,6 @@ import { useRole } from "../../utils/useRole";
 export default function PaymentList() {
   const navigate = useNavigate();
   const role = useRole();
-  const userName = localStorage.getItem("user_name") || "";
-  const userEmail = localStorage.getItem("user_email") || "";
 
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
@@ -25,23 +23,9 @@ export default function PaymentList() {
 
   const fetchData = async () => {
     try {
-      const res = await api.get("/payments/");
-      let payments = res.data;
-
-      // Filter to client's own records if not admin
-      if (role !== "admin") {
-        payments = payments.filter((p) => {
-          const name = (p.client_name || p.client || "").toLowerCase();
-          const email = (p.client_email || "").toLowerCase();
-          return (
-            name === userName.toLowerCase() ||
-            email === userEmail.toLowerCase() ||
-            (userName && name.includes(userName.split(" ")[0].toLowerCase()))
-          );
-        });
-      }
-
-      setData(payments);
+      const params = role !== "admin" ? { role: "client" } : {};
+      const res = await api.get("/payments/", { params });
+      setData(res.data);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load Payments");

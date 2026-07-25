@@ -25,34 +25,20 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // When in client session, pass ?role=client so backend filters by email
+        const clientParams = userRole !== "admin" ? { role: "client" } : {};
+
         const [clientsRes, invoicesRes, quotesRes, paymentsRes, businessRes] = await Promise.all([
-          api.get("/clients/"),
-          api.get("/invoices/"),
-          api.get("/quotes/"),
-          api.get("/payments/"),
+          api.get("/clients/", { params: clientParams }),
+          api.get("/invoices/", { params: clientParams }),
+          api.get("/quotes/", { params: clientParams }),
+          api.get("/payments/", { params: clientParams }),
           api.get("/settings/business/"),
         ]);
 
-        let invoices = invoicesRes.data;
-        let quotes = quotesRes.data;
-        let payments = paymentsRes.data;
-
-        // For client role: filter to only show records belonging to this client
-        if (userRole !== "admin") {
-          const clientMatch = (record) => {
-            const name = (record.client_name || record.client || "").toLowerCase();
-            const email = (record.client_email || "").toLowerCase();
-            return (
-              name === userName.toLowerCase() ||
-              email === userEmail.toLowerCase() ||
-              name.includes(userName.toLowerCase()) ||
-              (userName && userName.split(" ")[0] && name.includes(userName.split(" ")[0].toLowerCase()))
-            );
-          };
-          invoices = invoices.filter(clientMatch);
-          quotes = quotes.filter(clientMatch);
-          payments = payments.filter(clientMatch);
-        }
+        const invoices = invoicesRes.data;
+        const quotes = quotesRes.data;
+        const payments = paymentsRes.data;
 
         const totalRevenue = invoices.reduce((acc, inv) => acc + (parseFloat(inv.amount) || 0), 0);
 

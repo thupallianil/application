@@ -8,7 +8,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("admin");
+  const [selectedRole, setSelectedRole] = useState("admin"); // UI hint only, NOT used for auth
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -29,9 +29,24 @@ const Login = () => {
         localStorage.setItem("user_email", res.data.user?.email || email);
         const fullName = `${res.data.user?.first_name || ""} ${res.data.user?.last_name || ""}`.trim() || email.split("@")[0];
         localStorage.setItem("user_name", fullName);
-        // Use the role the user selected on the login page (admin card / client card)
-        localStorage.setItem("user_role", role);
-        toast.success("Login successful! Welcome back.");
+
+        const backendRole = res.data.user?.role || "client";
+
+        // ROLE SELECTION LOGIC:
+        // - If backend says admin AND user clicked Admin card → store "admin" → Admin page
+        // - If backend says admin AND user clicked Client card → store "client" → Client page
+        // - If backend says client → ALWAYS "client" regardless of card clicked (security)
+        let sessionRole;
+        if (backendRole === "admin") {
+          // Admin account: honor the card they clicked
+          sessionRole = selectedRole; // "admin" or "client" as chosen on login screen
+        } else {
+          // Client account: always client, cannot choose admin
+          sessionRole = "client";
+        }
+
+        localStorage.setItem("user_role", sessionRole);
+        toast.success(`Login successful! Welcome as ${sessionRole === "admin" ? "Admin" : "Client"}.`);
         navigate("/dashboard");
       } else {
         toast.error("Login failed. Unexpected response from server.");
@@ -64,7 +79,7 @@ const Login = () => {
         </h1>
 
         <p className="text-center text-sm text-gray-500 mt-2">
-          Choose your role and login to access your dashboard
+          Select <strong>Admin</strong> or <strong>Client</strong> to choose which dashboard to open
         </p>
 
         <form
@@ -77,15 +92,15 @@ const Login = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Admin Card */}
+            {/* Admin Card - visual hint only, actual role comes from backend */}
             <div
-              onClick={() => setRole("admin")}
-              className={`relative cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center justify-center transition-all ${role === "admin"
+              onClick={() => setSelectedRole("admin")}
+              className={`relative cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center justify-center transition-all ${selectedRole === "admin"
                 ? "border-indigo-600 bg-indigo-50/50"
                 : "border-gray-100 hover:border-gray-200"
                 }`}
             >
-              {role === "admin" && (
+              {selectedRole === "admin" && (
                 <div className="absolute top-2 right-2 text-indigo-600">
                   <CheckCircle2 size={18} fill="currentColor" className="text-white" />
                 </div>
@@ -97,15 +112,15 @@ const Login = () => {
               <p className="text-[10px] text-center text-gray-500 mt-1 leading-tight">Access admin panel and manage everything</p>
             </div>
 
-            {/* Client Card */}
+            {/* Client Card - visual hint only, actual role comes from backend */}
             <div
-              onClick={() => setRole("client")}
-              className={`relative cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center justify-center transition-all ${role === "client"
+              onClick={() => setSelectedRole("client")}
+              className={`relative cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center justify-center transition-all ${selectedRole === "client"
                 ? "border-green-500 bg-green-50/50"
                 : "border-gray-100 hover:border-gray-200"
                 }`}
             >
-              {role === "client" && (
+              {selectedRole === "client" && (
                 <div className="absolute top-2 right-2 text-green-500">
                   <CheckCircle2 size={18} fill="currentColor" className="text-white" />
                 </div>

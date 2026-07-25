@@ -10,8 +10,6 @@ import { useRole } from "../../utils/useRole";
 export default function InvoiceList() {
   const navigate = useNavigate();
   const role = useRole();
-  const userName = localStorage.getItem("user_name") || "";
-  const userEmail = localStorage.getItem("user_email") || "";
 
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
@@ -25,23 +23,9 @@ export default function InvoiceList() {
 
   const fetchData = async () => {
     try {
-      const res = await api.get("/invoices/");
-      let invoices = res.data;
-
-      // Filter to client's own records if not admin
-      if (role !== "admin") {
-        invoices = invoices.filter((inv) => {
-          const name = (inv.client_name || inv.client || "").toLowerCase();
-          const email = (inv.client_email || "").toLowerCase();
-          return (
-            name === userName.toLowerCase() ||
-            email === userEmail.toLowerCase() ||
-            (userName && name.includes(userName.split(" ")[0].toLowerCase()))
-          );
-        });
-      }
-
-      setData(invoices);
+      const params = role !== "admin" ? { role: "client" } : {};
+      const res = await api.get("/invoices/", { params });
+      setData(res.data);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load Invoices");
