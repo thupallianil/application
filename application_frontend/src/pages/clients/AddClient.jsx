@@ -4,129 +4,385 @@ import { toast } from "react-toastify";
 import api from "../../services/api";
 
 export default function AddClient() {
-  const [client, setClient] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
+
+  const [userType, setUserType] = useState("existing");
+
+  const [formData, setFormData] = useState({
+    existingUser: "",
+
+    client: "",
+    email: "",
+    username: "",
+    password: "",
+    phone: "",
+
+    address: "",
+    extraInfo: "",
+
+    firstName: "",
+    lastName: "",
+    website: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setLoading(true);
-    setError(null);
-    setSuccess(false);
-
-    const clientData = {
-      client,
-      email,
-      phone,
-    };
 
     try {
-      await api.post("/clients/", clientData);
 
-      setLoading(false);
-      setSuccess(true);
+      await api.post("/clients/", formData);
 
-      toast.success("Client created successfully!");
+      toast.success("Client Added Successfully");
 
-      setTimeout(() => {
-        navigate("/clients");
-      }, 1500);
+      navigate("/clients");
+
     } catch (err) {
-      setLoading(false);
-      console.error(err);
 
-      setError("Failed to add client. Please try again.");
-      toast.error("Failed to add client.");
+      toast.error("Unable to Add Client");
+
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="p-4 md:p-8">
-      <h1 className="text-2xl font-bold mb-2">
-        Add New Client
-      </h1>
 
-      <p className="text-sm text-gray-600 mb-8">
-        To create a new client, fill in the details below.
-      </p>
+<div className="min-h-screen bg-gray-100 py-10">
 
-      {error && (
-        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+<div className="max-w-5xl mx-auto">
 
-      {success && (
-        <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-          Client added successfully! Redirecting...
-        </div>
-      )}
+<div className="bg-white rounded-lg shadow border">
 
-      <div className="max-w-2xl bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-200">
-        <form onSubmit={handleSubmit} className="space-y-5">
+<div className="border-b px-8 py-5">
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
-              Business / Client Name *
-            </label>
+<h1 className="text-2xl font-bold">
+Add New Client
+</h1>
 
-            <input
-              type="text"
-              required
-              value={client}
-              onChange={(e) => setClient(e.target.value)}
-              placeholder="Enter Client Name"
-              className="w-full border border-gray-300 rounded p-2"
-            />
-          </div>
+<p className="text-gray-500 text-sm mt-2">
+To create a new client, choose either an existing user
+or create a new user.
+</p>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
-              Email *
-            </label>
+</div>
 
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter Email"
-              className="w-full border border-gray-300 rounded p-2"
-            />
-          </div>
+<form onSubmit={handleSubmit}>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
-              Phone *
-            </label>
+<div className="px-8 py-6">
 
-            <input
-              type="text"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Enter Phone Number"
-              className="w-full border border-gray-300 rounded p-2"
-            />
-          </div>
+<p className="font-medium mb-3">
+Add new client from:
+</p>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded disabled:opacity-50"
-          >
-            {loading ? "Adding..." : "Add New Client"}
-          </button>
+<div className="space-y-3 mb-8">
 
-        </form>
-      </div>
-    </div>
-  );
+<label className="flex items-center gap-2 cursor-pointer">
+
+<input
+type="radio"
+value="existing"
+checked={userType==="existing"}
+onChange={()=>setUserType("existing")}
+/>
+
+Existing User
+
+</label>
+
+<label className="flex items-center gap-2 cursor-pointer">
+
+<input
+type="radio"
+value="new"
+checked={userType==="new"}
+onChange={()=>setUserType("new")}
+/>
+
+Create New User
+
+</label>
+
+</div>
+
+{/* EXISTING USER */}
+
+{userType==="existing" && (
+
+<div className="space-y-5">
+
+<div>
+
+<label className="block mb-2 font-semibold">
+Select Existing User *
+</label>
+
+<select
+name="existingUser"
+value={formData.existingUser}
+onChange={handleChange}
+className="w-full border rounded-md px-3 py-2"
+>
+
+<option value="">
+Choose Client
+</option>
+
+<option value="1">
+Client One
+</option>
+
+<option value="2">
+Client Two
+</option>
+
+<option value="3">
+Client Three
+</option>
+
+</select>
+
+</div>
+
+<div>
+
+<label className="block mb-2 font-semibold">
+Business / Client Name *
+</label>
+
+<input
+type="text"
+name="client"
+value={formData.client}
+onChange={handleChange}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+</div>
+
+<div>
+
+<label className="block mb-2 font-semibold">
+Address
+</label>
+
+<textarea
+rows="3"
+name="address"
+value={formData.address}
+onChange={handleChange}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+</div>
+
+<div>
+
+<label className="block mb-2 font-semibold">
+Extra Info
+</label>
+
+<textarea
+rows="3"
+name="extraInfo"
+value={formData.extraInfo}
+onChange={handleChange}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+</div>
+
+</div>
+
+)}
+
+{/* CREATE NEW USER */}
+
+{userType==="new" && (
+
+<div className="grid md:grid-cols-2 gap-5">
+
+<div>
+
+<label className="block mb-2 font-semibold">
+Business / Client Name *
+</label>
+
+<input
+type="text"
+name="client"
+value={formData.client}
+onChange={handleChange}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+</div>
+
+<div>
+
+<label className="block mb-2 font-semibold">
+Email *
+</label>
+
+<input
+type="email"
+name="email"
+value={formData.email}
+onChange={handleChange}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+</div>
+
+<div>
+
+<label className="block mb-2 font-semibold">
+Username *
+</label>
+
+<input
+type="text"
+name="username"
+value={formData.username}
+onChange={handleChange}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+</div>
+
+<div>
+
+<label className="block mb-2 font-semibold">
+Password *
+</label>
+
+<input
+type="password"
+name="password"
+value={formData.password}
+onChange={handleChange}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+</div>
+<div>
+  <label className="block mb-2 font-semibold">
+    Phone *
+  </label>
+
+  <input
+    type="text"
+    name="phone"
+    value={formData.phone}
+    onChange={handleChange}
+    className="w-full border rounded-md px-3 py-2"
+  />
+</div>
+
+<div className="md:col-span-2">
+  <label className="block mb-2 font-semibold">
+    Address
+  </label>
+
+  <textarea
+    rows="3"
+    name="address"
+    value={formData.address}
+    onChange={handleChange}
+    className="w-full border rounded-md px-3 py-2"
+  />
+</div>
+
+<div className="md:col-span-2">
+  <label className="block mb-2 font-semibold">
+    Extra Info
+  </label>
+
+  <textarea
+    rows="3"
+    name="extraInfo"
+    value={formData.extraInfo}
+    onChange={handleChange}
+    className="w-full border rounded-md px-3 py-2"
+  />
+</div>
+
+<div>
+  <label className="block mb-2 font-semibold">
+    First Name
+  </label>
+
+  <input
+    type="text"
+    name="firstName"
+    value={formData.firstName}
+    onChange={handleChange}
+    className="w-full border rounded-md px-3 py-2"
+  />
+</div>
+
+<div>
+  <label className="block mb-2 font-semibold">
+    Last Name
+  </label>
+
+  <input
+    type="text"
+    name="lastName"
+    value={formData.lastName}
+    onChange={handleChange}
+    className="w-full border rounded-md px-3 py-2"
+  />
+</div>
+
+<div className="md:col-span-2">
+  <label className="block mb-2 font-semibold">
+    Website
+  </label>
+
+  <input
+    type="text"
+    name="website"
+    value={formData.website}
+    onChange={handleChange}
+    className="w-full border rounded-md px-3 py-2"
+  />
+</div>
+
+</div>
+)}
+
+<div className="mt-8">
+  <button
+    type="submit"
+    disabled={loading}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md disabled:opacity-50"
+  >
+    {loading ? "Saving..." : "Add New Client"}
+  </button>
+</div>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+);
+
 }
