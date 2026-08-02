@@ -8,7 +8,8 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Download
+  Download,
+  Eye
 } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../../services/api";
@@ -322,7 +323,7 @@ export default function QuoteList() {
                           <FileText size={16} />
                         </button>
                         <button onClick={() => handleView(q.id)} className="border border-[#2271b1] p-[3px] rounded-sm text-[#2271b1] bg-white hover:bg-[#f0f0f1]" title="View Details">
-                          <BarChart size={16} />
+                          <Eye size={16} />
                         </button>
                       </div>
                     </td>

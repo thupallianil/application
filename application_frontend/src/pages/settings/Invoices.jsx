@@ -2,6 +2,7 @@ import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
 import { Info, Save } from "lucide-react";
 import api from '../../services/api';
+import { invalidateSettingsCache } from '../../services/settingsService';
 
 const API_ENDPOINT = '/settings/invoices/';
 
@@ -56,6 +57,7 @@ export default function Invoices() {
     setIsSaving(true);
     try {
       await api.put(API_ENDPOINT, invoice);
+      invalidateSettingsCache('invoices');
       toast.success("Invoice settings saved!");
     } catch (err) {
       console.error(err);
@@ -159,8 +161,8 @@ export default function Invoices() {
                       <div className="w-8 h-1 bg-gray-400 rounded"></div>
                       <div className="ml-auto w-6 h-1 bg-gray-300 rounded"></div>
                     </div>
-                    <div className="absolute inse-2 top-7 space-y-1">
-                      {[1, 2, 3].map(r => <div kt-xey={r} className="w-full h-1 bg-gray-200 rounded"></div>)}
+                    <div className="absolute inset-x-2 top-7 space-y-1">
+                      {[1, 2, 3].map(r => <div key={r} className="w-full h-1 bg-gray-200 rounded"></div>)}
                       {num === 2 && <div className="w-full h-2 bg-gray-800 rounded mt-1"></div>}
                       {num === 3 && <div className="absolute top-0 right-0 w-8 h-8 bg-blue-900 rounded"></div>}
                     </div>

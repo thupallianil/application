@@ -8,7 +8,8 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Download
+  Download,
+  Eye
 } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../../services/api";
@@ -317,7 +318,7 @@ export default function InvoiceList() {
                           <FileText size={16} />
                         </button>
                         <button onClick={() => handleView(inv.id)} className="border border-[#2271b1] p-[3px] rounded-sm text-[#2271b1] bg-white hover:bg-[#f0f0f1]" title="View Details">
-                          <BarChart size={16} />
+                          <Eye size={16} />
                         </button>
                       </div>
                     </td>
@@ -326,7 +327,7 @@ export default function InvoiceList() {
                       <div>2025/04/11 at 4:46 pm</div>
                     </td>
                     <td className="p-[10px] text-center text-[#2271b1]">
-                      <BarChart size={18} className="mx-auto cursor-pointer" />
+                      <BarChart size={18} className="mx-auto cursor-pointer" onClick={() => handleView(inv.id)} />
                     </td>
                   </tr>
                 );

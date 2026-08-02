@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -92,6 +92,7 @@ export default function App() {
 
           {/* Settings - Admin only */}
           <Route element={<SettingsLayout />}>
+            <Route path="/settings" element={<Navigate to="/settings/general" replace />} />
             <Route path="/settings/general" element={<AdminRoute><General /></AdminRoute>} />
             <Route path="/settings/business" element={<AdminRoute><Business /></AdminRoute>} />
             <Route path="/settings/quotes" element={<AdminRoute><Quotes /></AdminRoute>} />

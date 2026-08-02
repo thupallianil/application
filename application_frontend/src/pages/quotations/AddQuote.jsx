@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../services/api";
+import { fetchMultipleSettings, formatAmount, getCurrencySymbol } from "../../services/settingsService";
 
 export default function AddQuote() {
   const navigate = useNavigate();
@@ -20,6 +21,9 @@ export default function AddQuote() {
     setCollapsedItems(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
+  const [paymentSettings, setPaymentSettings] = useState({});
+  const [taxSettings, setTaxSettings] = useState({});
+
   const [quote, setQuote] = useState({
     quotation_id: "",
     client: "",
@@ -37,7 +41,57 @@ export default function AddQuote() {
     { item: "", description: "", qty: 1, rate: 0, tax: 18, total: 0 },
   ]);
 
-  useEffect(() => { loadClients(); }, []);
+  useEffect(() => {
+    loadClients();
+    loadAllSettings();
+  }, []);
+
+  const loadAllSettings = async () => {
+    const today = new Date();
+    try {
+      const { quotes: qtSettings, payments: paySettings, tax: txSettings } =
+        await fetchMultipleSettings(['quotes', 'payments', 'tax']);
+
+      // Store payment & tax settings for use throughout the form
+      if (paySettings) setPaymentSettings(paySettings);
+      if (txSettings) {
+        setTaxSettings(txSettings);
+        const defaultTaxRate = parseFloat(txSettings.taxRate) || 18;
+        setItems([{ item: "", description: "", qty: 1, rate: 0, tax: defaultTaxRate, total: 0 }]);
+      }
+
+      // Apply quote settings
+      if (qtSettings) {
+        const p = qtSettings.prefix || "";
+        const suf = qtSettings.suffix || "";
+        const n = qtSettings.nextNumber || Math.floor(Math.random() * 900) + 100;
+        const valDays = parseInt(qtSettings.validity) || 15;
+
+        let valDt = new Date();
+        valDt.setDate(today.getDate() + valDays);
+
+        setQuote(prev => ({
+          ...prev,
+          quotation_id: p + n + suf,
+          quoteDate: today.toISOString().split("T")[0],
+          validUntil: valDt.toISOString().split("T")[0],
+          terms: qtSettings.terms !== undefined && qtSettings.terms !== null ? qtSettings.terms : prev.terms,
+        }));
+      } else {
+        setQuote(prev => ({
+          ...prev,
+          quoteDate: today.toISOString().split("T")[0],
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+      setQuote(prev => ({
+        ...prev,
+        quotation_id: "QT-" + (Math.floor(Math.random() * 9000) + 1000),
+        quoteDate: today.toISOString().split("T")[0]
+      }));
+    }
+  };
 
   const loadClients = async () => {
     try {
@@ -326,19 +380,19 @@ export default function AddQuote() {
                     <div className="font-bold text-gray-800 text-right mb-3">Quote Totals</div>
                     <div className="flex justify-between mb-2 border-b border-gray-100 pb-1">
                       <span className="text-gray-600 text-xs">Sub Total</span>
-                      <span className="text-gray-800">₹{subTotal.toFixed(2)}</span>
+                      <span className="text-gray-800">{formatAmount(subTotal, paymentSettings)}</span>
                     </div>
                     <div className="flex justify-between mb-2 border-b border-gray-100 pb-1">
-                      <span className="text-gray-600 text-xs text-right">GST (18%)</span>
-                      <span className="text-gray-800">₹{taxAmount.toFixed(2)}</span>
+                      <span className="text-gray-600 text-xs text-right">{taxSettings.taxName || 'GST (18%)'}</span>
+                      <span className="text-gray-800">{formatAmount(taxAmount, paymentSettings)}</span>
                     </div>
                     <div className="flex justify-between mb-2 border-b border-gray-100 pb-1">
                       <span className="text-gray-600 text-xs">Discount: <a href="#" className="text-[#2271b1] hover:underline">edit</a></span>
-                      <span className="text-red-500">-₹{Number(quote.discount).toFixed(2)}</span>
+                      <span className="text-red-500">-{formatAmount(Number(quote.discount), paymentSettings)}</span>
                     </div>
                     <div className="flex justify-between pt-1 font-bold text-gray-900 border-t border-gray-200 mt-2">
                       <span>Total Due</span>
-                      <span>₹{grandTotal.toFixed(2)}</span>
+                      <span>{formatAmount(grandTotal, paymentSettings)}</span>
                     </div>
                   </div>
                 </div>
@@ -507,7 +561,7 @@ export default function AddQuote() {
                 <div>
                   <label className="font-bold block mb-1">Quote Number</label>
                   <div className="flex items-center">
-                    <span className="text-gray-500 mr-2 text-xs">AKEYI-</span>
+                    <span className="text-gray-500 mr-2 text-xs"></span>
                     <input
                       type="text"
                       name="quotation_id"
@@ -575,7 +629,7 @@ export default function AddQuote() {
                   </div>
                 </div>
 
-                {/* Tax Settings */}
+                {/* Tax Settings – Dynamic from settings */}
                 <div className="border border-gray-200">
                   <div className="bg-gray-50 px-2 py-1.5 flex justify-between items-center text-xs cursor-pointer border-b border-gray-200">
                     <span>Tax Settings</span>
@@ -584,13 +638,25 @@ export default function AddQuote() {
                   <div className="p-2 space-y-3">
                     <div>
                       <label className="font-bold block mb-1 text-[11px] leading-tight">Prices entered with tax</label>
-                      <select className="w-full border border-gray-300 p-1.5 focus:border-[#2271b1] outline-none bg-white text-[11px]">
-                        <option>No, I will enter prices exclusi...</option>
+                      <select
+                        className="w-full border border-gray-300 p-1.5 focus:border-[#2271b1] outline-none bg-white text-[11px]"
+                        value={taxSettings.pricesIncludeTax || 'no'}
+                        disabled
+                      >
+                        <option value="no">No, I will enter prices exclusive of tax</option>
+                        <option value="yes">Yes, I will enter prices inclusive of tax</option>
                       </select>
+                      <p className="text-[10px] text-gray-400 mt-1 italic">Configured in Settings → Tax</p>
                     </div>
                     <div>
                       <label className="font-bold block mb-1 text-[11px] leading-tight">Tax Rate (%)</label>
-                      <input type="text" defaultValue="18" className="w-full border border-gray-300 p-1.5 focus:border-[#2271b1] outline-none bg-white text-xs" />
+                      <input
+                        type="text"
+                        value={taxSettings.taxRate || '18'}
+                        readOnly
+                        className="w-full border border-gray-300 p-1.5 focus:border-[#2271b1] outline-none bg-gray-50 text-xs"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">{taxSettings.taxName || 'GST (18%)'} — Edit in Settings → Tax</p>
                     </div>
                   </div>
                 </div>

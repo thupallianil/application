@@ -2,6 +2,7 @@ import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
 import { Info, Save } from "lucide-react";
 import api from '../../services/api';
+import { invalidateSettingsCache } from '../../services/settingsService';
 
 const API_ENDPOINT = '/settings/tax/';
 
@@ -47,6 +48,7 @@ export default function Tax() {
     setIsSaving(true);
     try {
       await api.put(API_ENDPOINT, tax);
+      invalidateSettingsCache('tax');
       toast.success("Tax settings saved!");
     } catch (err) {
       console.error(err);

@@ -2,6 +2,7 @@ import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
 import { Info, Settings, Handshake, Bell, FileText, Save } from "lucide-react";
 import api from '../../services/api';
+import { invalidateSettingsCache } from '../../services/settingsService';
 
 const API_ENDPOINT = '/settings/quotes/';
 
@@ -77,6 +78,7 @@ export default function Quotes() {
     setIsSaving(true);
     try {
       await api.put(API_ENDPOINT, quote);
+      invalidateSettingsCache('quotes');
       toast.success("Quote settings saved!");
     } catch (err) {
       console.error(err);

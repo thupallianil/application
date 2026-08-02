@@ -2,6 +2,7 @@ import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
 import { Info, Save } from "lucide-react";
 import api from '../../services/api';
+import { invalidateSettingsCache } from '../../services/settingsService';
 
 const API_ENDPOINT = '/settings/payments/';
 
@@ -59,6 +60,7 @@ export default function Payments() {
     setIsSaving(true);
     try {
       await api.put(API_ENDPOINT, form);
+      invalidateSettingsCache('payments');
       toast.success("Payment settings saved!");
     } catch (err) {
       console.error(err);
