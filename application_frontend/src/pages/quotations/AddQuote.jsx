@@ -166,9 +166,24 @@ export default function AddQuote() {
       navigate("/quotes");
     } catch (err) {
       console.error(err);
-      const msg = err?.response?.data
-        ? JSON.stringify(err.response.data)
-        : "Failed to create quotation.";
+      const data = err?.response?.data;
+      let msg = "Failed to create quotation.";
+      if (data) {
+        if (typeof data === "string") {
+          msg = data;
+        } else if (data.detail) {
+          msg = String(data.detail);
+        } else if (data.non_field_errors) {
+          msg = Array.isArray(data.non_field_errors) ? data.non_field_errors[0] : String(data.non_field_errors);
+        } else {
+          // Extract first field error
+          const firstKey = Object.keys(data)[0];
+          if (firstKey) {
+            const val = data[firstKey];
+            msg = Array.isArray(val) ? val[0] : String(val);
+          }
+        }
+      }
       toast.error(msg);
     } finally {
       setLoading(false);
