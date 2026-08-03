@@ -62,7 +62,7 @@ export default function Translate() {
       toast.success("Translate settings saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save translate settings!");
+      toast.error(err.message || "Failed to save translate settings!");
     } finally {
       setIsSaving(false);
     }

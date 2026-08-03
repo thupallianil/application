@@ -82,7 +82,7 @@ export default function Quotes() {
       toast.success("Quote settings saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save quote settings!");
+      toast.error(err.message || "Failed to save quote settings!");
     } finally {
       setIsSaving(false);
     }

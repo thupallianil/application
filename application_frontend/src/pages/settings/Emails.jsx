@@ -112,7 +112,7 @@ export default function Emails() {
       toast.success("Email settings saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save email settings!");
+      toast.error(err.message || "Failed to save email settings!");
     } finally { setIsSaving(false); }
   };
 

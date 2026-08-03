@@ -91,8 +91,8 @@ export default function PaymentDetails() {
     try {
       const { data } = await api.get(`/payments/${id}/`);
       setPayment(data);
-    } catch {
-      toast.error("Failed to load payment details.");
+    } catch (err) {
+      toast.error(err.message || "Failed to load payment details.");
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export default function PaymentDetails() {
       await api.delete(`/payments/${id}/`);
       toast.success("Payment deleted.");
       navigate("/payments");
-    } catch { toast.error("Delete failed."); }
+    } catch (err) { toast.error(err.message || "Delete failed."); }
   };
 
   const handlePrint = () => window.print();

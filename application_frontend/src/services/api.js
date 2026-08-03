@@ -49,6 +49,23 @@ api.interceptors.response.use(
       }
     }
 
+
+    // Extract DRF field errors
+    if (data) {
+      if (typeof data === "string") {
+         error.message = data;
+      } else if (data.detail) {
+         error.message = String(data.detail);
+      } else if (data.non_field_errors) {
+         error.message = Array.isArray(data.non_field_errors) ? data.non_field_errors[0] : String(data.non_field_errors);
+      } else {
+         const firstKey = Object.keys(data)[0];
+         if (firstKey && data[firstKey]) {
+            const val = data[firstKey];
+            error.message = Array.isArray(val) ? val[0] : String(val);
+         }
+      }
+    }
     console.error("API Error:", {
       status,
       data,

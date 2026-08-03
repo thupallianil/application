@@ -54,7 +54,7 @@ export default function Business() {
       toast.success("Business settings saved successfully!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save business settings!");
+      toast.error(err.message || "Failed to save business settings!");
     } finally {
       setIsSaving(false);
     }

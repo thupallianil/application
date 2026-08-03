@@ -68,8 +68,8 @@ export default function ClientList() {
       setLoading(true);
       const res = await api.get("/clients/");
       setClients(res.data);
-    } catch {
-      toast.error("Failed to load clients");
+    } catch (err) {
+      toast.error(err.message || "Failed to load clients");
     } finally {
       setLoading(false);
     }
@@ -82,8 +82,8 @@ export default function ClientList() {
       await api.delete(`/clients/${id}/`);
       toast.success("Client deleted.");
       loadClients();
-    } catch {
-      toast.error("Delete failed.");
+    } catch (err) {
+      toast.error(err.message || "Delete failed.");
     }
   };
 
@@ -99,8 +99,8 @@ export default function ClientList() {
         toast.success(`${selected.length} client(s) deleted.`);
         setSelected([]);
         loadClients();
-      } catch {
-        toast.error("Bulk delete failed.");
+      } catch (err) {
+        toast.error(err.message || "Bulk delete failed.");
       }
     }
   };

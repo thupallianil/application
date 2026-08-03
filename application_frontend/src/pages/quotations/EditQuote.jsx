@@ -434,7 +434,7 @@ export default function EditQuote() {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load quotation details.");
+      toast.error(err.message || "Failed to load quotation details.");
     }
   };
 
@@ -510,8 +510,8 @@ export default function EditQuote() {
       await api.put(`/quotes/${id}/`, { ...quote, items, subtotal, tax: taxAmount, grand_total: grandTotal, amount: grandTotal });
       toast.success("Quote Updated successfully!");
       navigate("/quotes");
-    } catch {
-      toast.error("Unable to update quote");
+    } catch (err) {
+      toast.error(err.message || "Unable to update quote");
     }
     setLoading(false);
   };
@@ -523,8 +523,8 @@ export default function EditQuote() {
       await api.put(`/quotes/${id}/`, payload);
       toast.success("Draft updated successfully!");
       navigate("/quotes");
-    } catch {
-      toast.error("Unable to update draft");
+    } catch (err) {
+      toast.error(err.message || "Unable to update draft");
     }
     setLoading(false);
   };

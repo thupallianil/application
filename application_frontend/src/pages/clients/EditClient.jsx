@@ -395,7 +395,7 @@ export default function EditClient() {
       });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch client details.");
+      toast.error(err.message || "Failed to fetch client details.");
     } finally {
       setLoading(false);
     }
@@ -415,8 +415,8 @@ export default function EditClient() {
       await api.put(`/clients/${id}/`, clientData);
       toast.success("Client Updated successfully!");
       navigate("/clients");
-    } catch {
-      toast.error("Unable to update client");
+    } catch (err) {
+      toast.error(err.message || "Unable to update client");
     }
     setSaving(false);
   };

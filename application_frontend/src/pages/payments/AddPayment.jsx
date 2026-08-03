@@ -58,7 +58,7 @@ export default function AddPayment() {
   const [paymentSettings, setPaymentSettings] = useState({});
 
   useEffect(() => {
-    api.get("/clients/").then(res => setClients(res.data)).catch(() => toast.error("Failed to load clients."));
+    api.get("/clients/").then(res => setClients(res.data)).catch((err) => toast.error(err.message || "Failed to load clients."));
     fetchSettingsGroup('payments').then(res => setPaymentSettings(res));
   }, []);
 
@@ -74,8 +74,8 @@ export default function AddPayment() {
       await api.post("/payments/", payment);
       toast.success("Payment recorded successfully!");
       navigate("/payments");
-    } catch {
-      toast.error("Failed to record payment.");
+    } catch (err) {
+      toast.error(err.message || "Failed to record payment.");
     } finally {
       setSaving(false);
     }

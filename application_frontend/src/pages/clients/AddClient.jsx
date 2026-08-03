@@ -398,7 +398,7 @@ export default function AddClient() {
       toast.success("Client Added Successfully");
       navigate("/clients");
     } catch (err) {
-      toast.error("Unable to Add Client");
+      toast.error(err.message || "Unable to Add Client");
     }
     setLoading(false);
   };

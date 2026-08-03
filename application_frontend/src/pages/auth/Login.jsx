@@ -56,7 +56,7 @@ const Login = () => {
       const msg = err?.response?.data?.error;
 
       if (status === 401) {
-        toast.error(msg || "Invalid email or password.");
+        toast.error(err.message || msg || "Invalid email or password.");
       } else if (status === 400) {
         toast.error(msg || "Please check your input.");
       } else if (!err.response) {

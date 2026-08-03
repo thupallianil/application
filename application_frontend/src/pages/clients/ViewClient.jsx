@@ -114,8 +114,8 @@ export default function ViewClient() {
       await api.delete(`/clients/${id}/`);
       toast.success("Client deleted.");
       navigate("/clients");
-    } catch {
-      toast.error("Failed to delete client.");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete client.");
     }
   };
 

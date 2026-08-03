@@ -52,7 +52,7 @@ export default function Tax() {
       toast.success("Tax settings saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save tax settings!");
+      toast.error(err.message || "Failed to save tax settings!");
     } finally { setIsSaving(false); }
   };
 

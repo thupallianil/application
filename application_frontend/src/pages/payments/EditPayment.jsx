@@ -96,8 +96,8 @@ export default function EditPayment() {
       await api.put(`/payments/${id}/`, payment);
       toast.success("Payment updated successfully!");
       navigate("/payments");
-    } catch {
-      toast.error("Failed to update payment.");
+    } catch (err) {
+      toast.error(err.message || "Failed to update payment.");
     } finally {
       setSaving(false);
     }

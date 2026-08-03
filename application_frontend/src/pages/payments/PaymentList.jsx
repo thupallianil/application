@@ -53,8 +53,8 @@ export default function PaymentList() {
       const params = role !== "admin" ? { role: "client" } : {};
       const res = await api.get("/payments/", { params });
       setPayments(res.data);
-    } catch {
-      toast.error("Failed to load payments.");
+    } catch (err) {
+      toast.error(err.message || "Failed to load payments.");
     } finally {
       setLoading(false);
     }
@@ -66,8 +66,8 @@ export default function PaymentList() {
       await api.delete(`/payments/${id}/`);
       toast.success("Payment deleted.");
       loadPayments();
-    } catch {
-      toast.error("Delete failed.");
+    } catch (err) {
+      toast.error(err.message || "Delete failed.");
     }
   };
 
@@ -80,7 +80,7 @@ export default function PaymentList() {
         toast.success(`${selected.length} payment(s) deleted.`);
         setSelected([]);
         loadPayments();
-      } catch { toast.error("Bulk delete failed."); }
+      } catch (err) { toast.error(err.message || "Bulk delete failed."); }
     }
   };
 

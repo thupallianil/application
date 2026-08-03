@@ -453,7 +453,7 @@ export default function EditInvoice() {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load invoice details.");
+      toast.error(err.message || "Failed to load invoice details.");
     }
   };
 
@@ -538,8 +538,8 @@ export default function EditInvoice() {
       await api.put(`/invoices/${id}/`, { ...invoice, items, payments, subtotal, taxAmount, grandTotal });
       toast.success("Invoice Updated successfully!");
       navigate("/invoices");
-    } catch {
-      toast.error("Unable to update invoice");
+    } catch (err) {
+      toast.error(err.message || "Unable to update invoice");
     }
     setLoading(false);
   };
@@ -551,8 +551,8 @@ export default function EditInvoice() {
       await api.put(`/invoices/${id}/`, payload);
       toast.success("Draft updated successfully!");
       navigate("/invoices");
-    } catch {
-      toast.error("Unable to update draft");
+    } catch (err) {
+      toast.error(err.message || "Unable to update draft");
     }
     setLoading(false);
   };

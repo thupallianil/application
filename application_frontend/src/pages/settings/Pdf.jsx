@@ -54,7 +54,7 @@ export default function Pdf() {
       toast.success("PDF settings saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save PDF settings!");
+      toast.error(err.message || "Failed to save PDF settings!");
     } finally {
       setIsSaving(false);
     }

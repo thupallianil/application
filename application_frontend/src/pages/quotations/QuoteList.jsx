@@ -28,8 +28,39 @@ export default function QuoteList() {
   const [clientFilter, setClientFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("All dates");
 
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkAction, setBulkAction] = useState("");
+  const [bulkActionBottom, setBulkActionBottom] = useState("");
+
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) setSelectedIds(paginatedData.map(i => i.id));
+    else setSelectedIds([]);
+  };
+
+  const handleSelectOne = (id, checked) => {
+    if (checked) setSelectedIds(prev => [...prev, id]);
+    else setSelectedIds(prev => prev.filter(x => x !== id));
+  };
+
+  const handleBulkApply = async (actionPosition) => {
+    const action = actionPosition === "bottom" ? bulkActionBottom : bulkAction;
+    if (action === "trash" && selectedIds.length > 0) {
+      if (!window.confirm(`Move ${selectedIds.length} items to trash?`)) return;
+      try {
+        await Promise.all(selectedIds.map(id => api.delete(`/quotes/${id}/`)));
+        toast.success("Items deleted.");
+        setSelectedIds([]);
+        loadQuotes();
+      } catch (err) {
+        toast.error(err.message || "Bulk delete failed.");
+      }
+    } else if (action === "trash" && selectedIds.length === 0) {
+      toast.warning("Please select items first.");
+    }
+  };
 
   useEffect(() => {
     loadQuotes();
@@ -43,7 +74,7 @@ export default function QuoteList() {
       setQuotes(res.data);
     } catch (err) {
       console.log(err);
-      toast.error("Unable to load quotes.");
+      toast.error(err.message || "Unable to load quotes.");
     } finally {
       setLoading(false);
     }
@@ -55,8 +86,8 @@ export default function QuoteList() {
       await api.delete(`/quotes/${id}/`);
       toast.success("Quote deleted.");
       loadQuotes();
-    } catch {
-      toast.error("Delete failed.");
+    } catch (err) {
+      toast.error(err.message || "Delete failed.");
     }
   };
 
@@ -100,6 +131,12 @@ export default function QuoteList() {
       .toLowerCase()
       .includes(search.toLowerCase());
 
+    let matchesDate = true;
+    if (dateFilter !== "All dates") {
+      const qDate = quote.quoteDate || quote.created_at || "";
+      matchesDate = qDate.includes(dateFilter) || qDate === dateFilter;
+    }
+
     let s = quote.status?.toLowerCase() || '';
 
     const displayFilter = statusFilter.toLowerCase();
@@ -109,7 +146,7 @@ export default function QuoteList() {
       || (displayFilter === 'declined' && s === 'rejected');
 
     const matchesClient = clientFilter === "" || String(quote.client) === clientFilter;
-    return matchesSearch && matchesStatus && matchesClient;
+    return matchesSearch && matchesStatus && matchesClient && matchesDate;
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredQuotes.length / ITEMS_PER_PAGE));
@@ -184,11 +221,11 @@ export default function QuoteList() {
       {/* Filters & Pagination (Top) */}
       <div className="flex flex-wrap justify-between items-center bg-white p-2 border border-[#c3c4c7] -mb-px relative z-10 rounded-t-sm shadow-sm">
         <div className="flex items-center space-x-2 flex-wrap">
-          <select className="border border-[#8c8f94] px-2 py-[2px] rounded-sm min-w-[120px] text-[13px] text-[#2c3338]">
-            <option>Bulk actions</option>
-            <option>Trash</option>
+          <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)} className="border border-[#8c8f94] px-2 py-[2px] rounded-sm min-w-[120px] text-[13px] text-[#2c3338]">
+            <option value="">Bulk actions</option>
+            <option value="trash">Trash</option>
           </select>
-          <button className="border border-[#2271b1] text-[#2271b1] hover:bg-[#f3f5f6] px-3 py-[2px] rounded-sm font-medium">Apply</button>
+          <button onClick={() => handleBulkApply('top')} className="border border-[#2271b1] text-[#2271b1] hover:bg-[#f3f5f6] px-3 py-[2px] rounded-sm font-medium">Apply</button>
 
           <select
             className="border border-[#8c8f94] px-2 py-[2px] rounded-sm min-w-[110px] text-[13px] text-[#2c3338]"
@@ -196,6 +233,17 @@ export default function QuoteList() {
             onChange={(e) => setDateFilter(e.target.value)}
           >
             <option value="All dates">All dates</option>
+            {[...new Set(quotes.map(q => {
+              const dStr = q.quoteDate || q.created_at;
+              if (!dStr) return null;
+              const parts = dStr.split('/');
+              if (parts.length === 3) return `${parts[1]}/${parts[2]}`;
+              const partsDash = dStr.split('-');
+              if (partsDash.length === 3) return `${partsDash[1]}-${partsDash[0]}`; // YYYY-MM
+              return dStr;
+            }).filter(Boolean))].map(d => (
+              <option key={d} value={d}>{d}</option>
+            ))}
           </select>
 
           <select
@@ -209,15 +257,15 @@ export default function QuoteList() {
             ))}
           </select>
 
-          <select className="border border-[#8c8f94] px-2 py-[2px] rounded-sm min-w-[140px] text-[13px] text-[#2c3338]">
-            <option>View all statuses</option>
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="border border-[#8c8f94] px-2 py-[2px] rounded-sm min-w-[140px] text-[13px] text-[#2c3338]">
+            {topTabs.map(t => <option key={t.val} value={t.val}>{t.val === 'All' ? 'View all statuses' : t.label}</option>)}
           </select>
 
           <select className="border border-[#8c8f94] px-2 py-[2px] rounded-sm min-w-[110px] text-[13px] text-[#2c3338] hidden xl:inline-block">
             <option>All SEO Scores</option>
           </select>
 
-          <button className="border border-[#8c8f94] bg-[#f6f7f7] hover:bg-[#f0f0f1] px-3 py-[2px] rounded-sm font-medium text-[#2c3338]">Filter</button>
+          <button onClick={() => setPage(1)} className="border border-[#8c8f94] bg-[#f6f7f7] hover:bg-[#f0f0f1] px-3 py-[2px] rounded-sm font-medium text-[#2c3338]">Filter</button>
 
           <button onClick={handleExportCSV} className="bg-[#2271b1] hover:bg-[#135e96] text-white px-3 py-[3px] rounded-sm font-medium flex items-center gap-1 border border-[#2271b1] xl:ml-2">
             Export as CSV
@@ -252,7 +300,7 @@ export default function QuoteList() {
           <thead>
             <tr className="border-b border-[#c3c4c7]">
               <th className="font-semibold p-[10px] w-10 border-r border-[#c3c4c7] text-center">
-                <input type="checkbox" className="rounded-sm border-[#8c8f94]" />
+                <input type="checkbox" onChange={handleSelectAll} checked={paginatedData.length > 0 && selectedIds.length === paginatedData.length} className="rounded-sm border-[#8c8f94]" />
               </th>
               <th className="font-semibold p-[10px] flex-[2] min-w-[220px]">Title <span className="text-[#a7aaad] text-[10px] ml-1">▲▼</span></th>
               <th className="font-semibold p-[10px] text-[#2271b1]">Number <span className="text-[#a7aaad] text-[10px] ml-1">▲▼</span></th>
@@ -281,7 +329,7 @@ export default function QuoteList() {
                 return (
                   <tr key={q.id} className={`${idx % 2 !== 0 ? "bg-[#f9f9f9]" : "bg-white"} hover:bg-[#f0f0f1] border-b border-[#f0f0f0] group`}>
                     <td className="p-[10px] text-center">
-                      <input type="checkbox" className="rounded-sm border-[#8c8f94]" />
+                      <input type="checkbox" checked={selectedIds.includes(q.id)} onChange={(e) => handleSelectOne(q.id, e.target.checked)} className="rounded-sm border-[#8c8f94]" />
                     </td>
                     <td className="p-[10px] whitespace-normal">
                       <div className="flex flex-col">
@@ -359,7 +407,7 @@ export default function QuoteList() {
           <tfoot>
             <tr className="border-t border-[#c3c4c7] bg-white">
               <th className="font-semibold p-[10px] w-10 text-center border-r border-[#c3c4c7]">
-                <input type="checkbox" className="rounded-sm border-[#8c8f94]" />
+                <input type="checkbox" onChange={handleSelectAll} checked={paginatedData.length > 0 && selectedIds.length === paginatedData.length} className="rounded-sm border-[#8c8f94]" />
               </th>
               <th className="font-semibold p-[10px] flex-1 min-w-[200px]">Title</th>
               <th className="font-semibold p-[10px] text-[#2c3338]">Number</th>
@@ -377,11 +425,11 @@ export default function QuoteList() {
       {/* Bottom Actions & Pagination */}
       <div className="flex flex-wrap justify-between items-center bg-transparent mt-2">
         <div className="flex items-center space-x-2">
-          <select className="border border-[#8c8f94] px-2 py-[2px] rounded-sm min-w-[120px] text-[13px] text-[#2c3338] h-[28px]">
-            <option>Bulk actions</option>
-            <option>Trash</option>
+          <select value={bulkActionBottom} onChange={(e) => setBulkActionBottom(e.target.value)} className="border border-[#8c8f94] px-2 py-[2px] rounded-sm min-w-[120px] text-[13px] text-[#2c3338] h-[28px]">
+            <option value="">Bulk actions</option>
+            <option value="trash">Trash</option>
           </select>
-          <button className="border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] hover:bg-[#f3f5f6] px-3 py-[2px] rounded-sm font-medium h-[28px] flex items-center">Apply</button>
+          <button onClick={() => handleBulkApply('bottom')} className="border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] hover:bg-[#f3f5f6] px-3 py-[2px] rounded-sm font-medium h-[28px] flex items-center">Apply</button>
         </div>
 
         {/* BOTTOM RIGHT PAGINATION */}

@@ -82,7 +82,7 @@ export default function Extras() {
       toast.success("Extra settings saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save extra settings!");
+      toast.error(err.message || "Failed to save extra settings!");
     } finally {
       setIsSaving(false);
     }

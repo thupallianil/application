@@ -54,7 +54,7 @@ export default function Licenses() {
       toast.success("License saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save license!");
+      toast.error(err.message || "Failed to save license!");
     } finally {
       setIsSaving(false);
     }

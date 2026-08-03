@@ -53,7 +53,7 @@ export default function General() {
       toast.success("General settings saved successfully!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save general settings!");
+      toast.error(err.message || "Failed to save general settings!");
     } finally {
       setIsSaving(false);
     }

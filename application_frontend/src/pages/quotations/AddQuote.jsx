@@ -103,7 +103,7 @@ export default function AddQuote() {
       setClients(res.data);
     } catch (err) {
       console.log(err);
-      toast.error("Unable to load clients.");
+      toast.error(err.message || "Unable to load clients.");
     }
   };
 

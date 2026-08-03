@@ -569,8 +569,8 @@ export default function AddInvoice() {
       });
       toast.success("Draft saved successfully!");
       navigate("/invoices");
-    } catch {
-      toast.error("Unable to save draft");
+    } catch (err) {
+      toast.error(err.message || "Unable to save draft");
     }
     setLoading(false);
   };
@@ -585,8 +585,8 @@ export default function AddInvoice() {
       await api.post("/invoices/", { ...invoice, items, payments, subtotal, taxAmount, grandTotal });
       toast.success("Invoice published successfully!");
       navigate("/invoices");
-    } catch {
-      toast.error("Unable to create invoice");
+    } catch (err) {
+      toast.error(err.message || "Unable to create invoice");
     }
     setLoading(false);
   };

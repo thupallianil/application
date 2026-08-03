@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { toast } from "react-toastify";
-import { Printer, Download, ArrowLeft, Edit } from "lucide-react";
+import { Download, ArrowLeft, Edit } from "lucide-react";
 import { useRole } from "../../utils/useRole";
 import { downloadAsPDF } from "../../utils/downloadPDF";
 
@@ -22,12 +22,11 @@ export default function QuoteDetails() {
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Failed to load quote details.");
+        toast.error(err.message || "Failed to load quote details.");
         setLoading(false);
       });
   }, [id]);
 
-  const handlePrint = () => window.print();
   const handleDownloadPDF = () => downloadAsPDF('quote-print-area', `Quote-${id}.pdf`);
 
   if (loading) return <div className="p-10 flex justify-center text-gray-500">Loading quote details...</div>;
@@ -65,13 +64,6 @@ export default function QuoteDetails() {
                 Edit
               </button>
             )}
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-medium transition"
-            >
-              <Printer size={16} />
-              Print
-            </button>
             <button
               onClick={handleDownloadPDF}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition"

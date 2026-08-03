@@ -61,7 +61,7 @@ export default function Invoices() {
       toast.success("Invoice settings saved!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save invoice settings!");
+      toast.error(err.message || "Failed to save invoice settings!");
     } finally { setIsSaving(false); }
   };
 
