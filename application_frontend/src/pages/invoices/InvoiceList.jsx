@@ -9,7 +9,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Download,
-  Eye
+  Eye,
+  Printer
 } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../../services/api";
@@ -314,11 +315,26 @@ export default function InvoiceList() {
                     </td>
                     <td className="p-[10px]">
                       <div className="flex gap-2">
-                        <button onClick={() => window.open(`/invoices/${inv.id}`, "_blank")} className="border border-[#2271b1] p-[3px] rounded-sm text-[#2271b1] bg-white hover:bg-[#f0f0f1]" title="Print / Download">
-                          <FileText size={16} />
-                        </button>
-                        <button onClick={() => handleView(inv.id)} className="border border-[#2271b1] p-[3px] rounded-sm text-[#2271b1] bg-white hover:bg-[#f0f0f1]" title="View Details">
+                        <button
+                          onClick={() => handleView(inv.id)}
+                          className="border border-[#2271b1] p-[3px] rounded-sm text-[#2271b1] bg-white hover:bg-[#f0f0f1]"
+                          title="View Details"
+                        >
                           <Eye size={16} />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/invoices/${inv.id}`)}
+                          className="border border-[#8c8f94] p-[3px] rounded-sm text-[#3c434a] bg-white hover:bg-[#f0f0f1]"
+                          title="Print Invoice"
+                        >
+                          <Printer size={16} />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/invoices/${inv.id}`)}
+                          className="border border-[#00a32a] p-[3px] rounded-sm text-[#00a32a] bg-white hover:bg-[#f0f0f1]"
+                          title="Download PDF"
+                        >
+                          <Download size={16} />
                         </button>
                       </div>
                     </td>

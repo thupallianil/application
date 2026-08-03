@@ -12,6 +12,17 @@ const ADMIN_ONLY_PATHS = [
   "/system",
 ];
 
+// Global print styles injected once — hides sidebar/navbar/footer on print
+const PRINT_STYLES = `
+@media print {
+  [data-print-hide] { display: none !important; }
+  .admin-layout-root { display: block !important; }
+  .admin-layout-main { display: block !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+  @page { margin: 10mm; size: A4; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+`;
+
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
@@ -23,7 +34,6 @@ export default function AdminLayout() {
   }
 
   // ── Role Guard ──────────────────────────────────────────────
-  // If a client tries to visit an admin-only page, redirect to dashboard
   const userRole = localStorage.getItem("user_role") || "client";
   const isAdminOnly = ADMIN_ONLY_PATHS.some((p) =>
     location.pathname.startsWith(p)
@@ -34,15 +44,26 @@ export default function AdminLayout() {
   // ────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar isOpen={isSidebarOpen} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <main className="flex-1 p-6">
-          <Outlet />
-        </main>
-        <Footer />
+    <>
+      {/* Inject print-hiding styles once */}
+      <style>{PRINT_STYLES}</style>
+
+      <div className="admin-layout-root flex min-h-screen bg-gray-100">
+        <div data-print-hide>
+          <Sidebar isOpen={isSidebarOpen} />
+        </div>
+        <div className="flex-1 flex flex-col min-w-0">
+          <div data-print-hide>
+            <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+          </div>
+          <main className="admin-layout-main flex-1 p-6">
+            <Outlet />
+          </main>
+          <div data-print-hide>
+            <Footer />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

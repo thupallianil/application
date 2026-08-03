@@ -4,6 +4,7 @@ import api from "../../services/api";
 import { toast } from "react-toastify";
 import { Printer, Download, ArrowLeft, Edit } from "lucide-react";
 import { useRole } from "../../utils/useRole";
+import { downloadAsPDF } from "../../utils/downloadPDF";
 
 export default function InvoiceDetails() {
   const { id } = useParams();
@@ -27,7 +28,7 @@ export default function InvoiceDetails() {
   }, [id]);
 
   const handlePrint = () => window.print();
-  const handleDownloadPDF = () => window.print();
+  const handleDownloadPDF = () => downloadAsPDF('invoice-print-area', `Invoice-${id}.pdf`);
 
   if (loading) return <div className="p-10 flex justify-center text-gray-500">Loading invoice details...</div>;
   if (!invoice) return <div className="p-10 text-center text-red-600">Invoice not found.</div>;
@@ -80,7 +81,7 @@ export default function InvoiceDetails() {
         </div>
 
         {/* Invoice Paper Document */}
-        <div className="bg-white max-w-[850px] mx-auto border border-gray-200 shadow-xl print:shadow-none print:border-none print:m-0 print:p-0">
+        <div id="invoice-print-area" className="bg-white max-w-[850px] mx-auto border border-gray-200 shadow-xl print:shadow-none print:border-none print:m-0 print:p-0">
 
           <div className="p-8 md:p-12">
             {/* Header */}

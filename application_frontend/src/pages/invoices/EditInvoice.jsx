@@ -3,6 +3,7 @@ import api from "../../services/api";
 import { fetchMultipleSettings, formatAmount, getCurrencySymbol } from "../../services/settingsService";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
+import DocumentPreviewModal from "../../components/documents/DocumentPreviewModal";
 import {
   Plus, Trash2, Save, ChevronUp, ChevronDown, FileText, CreditCard,
   User, Calendar, Hash, Tag, X, Eye, Bold, Italic, Underline,
@@ -356,133 +357,6 @@ function Panel({ title, children, defaultOpen = true }) {
   );
 }
 
-/* ════════════════════
-   Preview Modal
-   ════════════════════ */
-function PreviewModal({ invoice, items, payments, subtotal, taxAmount, discountAmt, grandTotal, currencySymbol, onClose, onPrint }) {
-  const fmt = (v) => `${currencySymbol}${Number(v).toFixed(2)}`;
-  const clientName = invoice._clientName || `Client #${invoice.client}`;
-  const tpl = invoice.template || "Template 1";
-
-  const handlePrint = () => {
-    window.print();
-    toast.info("Opening print dialog…");
-  };
-
-  return (
-    <div className="ai-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="ai-modal">
-        <div className="ai-modal-header">
-          <h3><Eye size={16} style={{ marginRight: 6, verticalAlign: "middle" }} />Invoice Preview ({tpl})</h3>
-          <button type="button" className="ai-del-btn" onClick={onClose}><X size={18} /></button>
-        </div>
-        <div className="ai-modal-body" style={{ padding: 0 }}>
-
-          <div style={{ padding: '32px' }}>
-            {tpl === "Template 2" && <div style={{ height: '8px', backgroundColor: '#334155', borderRadius: '4px', marginBottom: '24px' }} />}
-
-            {/* Header */}
-            <div className="ai-preview-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-              <div>
-                <div className="ai-preview-title" style={{ color: tpl === "Template 2" ? "#334155" : tpl === "Template 3" ? "#1d4ed8" : "#1d2327" }}>
-                  {invoice.title || "Untitled Invoice"}
-                </div>
-                <div className="ai-preview-meta" style={{ marginTop: '8px' }}>Invoice # {invoice.invoiceNumber}</div>
-                <div className="ai-preview-meta">Client: <b style={{ color: tpl === "Template 3" ? "#1e293b" : "inherit" }}>{clientName}</b></div>
-              </div>
-              <div style={{
-                textAlign: tpl === "Template 3" ? "left" : "right",
-                backgroundColor: tpl === "Template 3" ? "#f8fafc" : "transparent",
-                border: tpl === "Template 3" ? "1px solid #e2e8f0" : "none",
-                borderRadius: tpl === "Template 3" ? "6px" : "0",
-                padding: tpl === "Template 3" ? "12px 16px" : "0",
-                minWidth: tpl === "Template 3" ? "180px" : "auto"
-              }}>
-                <div style={{ fontSize: 13, color: "#646970" }}>Date: <span style={{ fontWeight: tpl === 'Template 3' ? 600 : 'normal', color: '#1e293b' }}>{invoice.invoiceDate}</span></div>
-                <div style={{ fontSize: 13, color: "#646970", marginTop: '4px' }}>Due: <span style={{ fontWeight: tpl === 'Template 3' ? 600 : 'normal', color: '#1e293b' }}>{invoice.dueDate}</span></div>
-                <div style={{ marginTop: 12 }}>
-                  <span className={`ai-status-badge status-${invoice.status.toLowerCase()}`} style={{ display: "inline-flex" }}>
-                    {invoice.status}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Line Items */}
-            <table className="ai-preview-table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px', fontSize: '13px' }}>
-              <thead style={{
-                backgroundColor: tpl === "Template 2" ? "#334155" : tpl === "Template 3" ? "#eff6ff" : "#f6f7f7",
-                color: tpl === "Template 2" ? "#f8fafc" : (tpl === "Template 3" ? "#1e3a8a" : "#1e293b"),
-                borderBottom: tpl === "Template 3" ? "2px solid #3b82f6" : "1px solid #e2e4e7"
-              }}>
-                <tr>
-                  <th style={{ padding: '10px 12px', textAlign: 'left' }}>#</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left' }}>Item</th>
-                  <th style={{ textAlign: "right", padding: '10px 12px' }}>Qty</th>
-                  <th style={{ textAlign: "right", padding: '10px 12px' }}>Rate</th>
-                  <th style={{ textAlign: "right", padding: '10px 12px' }}>Tax %</th>
-                  <th style={{ textAlign: "right", padding: '10px 12px' }}>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #e2e4e7' }}>
-                    <td style={{ padding: '10px 12px' }}>{i + 1}</td>
-                    <td style={{ padding: '10px 12px' }}>
-                      <div style={{ fontWeight: 600, color: tpl === "Template 2" ? "#334155" : "#1e293b" }}>{row.item || "—"}</div>
-                      {row.itemTitle && <div style={{ fontSize: 11, color: "#646970", marginTop: '2px' }}>{row.itemTitle}</div>}
-                    </td>
-                    <td style={{ textAlign: "right", padding: '10px 12px' }}>{row.qty}</td>
-                    <td style={{ textAlign: "right", padding: '10px 12px' }}>{fmt(row.price)}</td>
-                    <td style={{ textAlign: "right", padding: '10px 12px' }}>{row.tax}%</td>
-                    <td style={{ textAlign: "right", fontWeight: 600, padding: '10px 12px' }}>{fmt(row.total)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Totals */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div className="ai-preview-totals" style={{ marginTop: '24px', backgroundColor: tpl === "Template 3" ? "#f8fafc" : "transparent", padding: tpl === "Template 3" ? "16px" : "0", borderRadius: tpl === "Template 3" ? "6px" : "0", border: tpl === "Template 3" ? "1px solid #e2e8f0" : "none" }}>
-                <div className="ai-preview-totals-row"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
-                <div className="ai-preview-totals-row"><span>Tax</span><span>{fmt(taxAmount)}</span></div>
-                {discountAmt > 0 && <div className="ai-preview-totals-row" style={{ color: "#d63638" }}><span>Discount</span><span>− {fmt(discountAmt)}</span></div>}
-                <div className="ai-preview-totals-row grand" style={{ borderTopColor: tpl === 'Template 2' ? '#334155' : '#c3c4c7', paddingTop: '12px' }}>
-                  <span>Total Due</span><span style={{ color: tpl === "Template 2" ? "#334155" : tpl === "Template 3" ? "#1d4ed8" : "#1d2327" }}>{fmt(grandTotal)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payments recorded */}
-            {payments.some(p => p.amount) && (
-              <div style={{ marginTop: 24, padding: '16px', backgroundColor: '#f0fdf4', borderRadius: '4px', border: '1px solid #bbf7d0' }}>
-                <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13, color: '#166534' }}>Payments Recorded</div>
-                {payments.filter(p => p.amount).map((p, i) => (
-                  <div key={i} style={{ fontSize: 12, color: "#15803d", marginBottom: 3, display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{p.date} — {p.method || "—"} [{p.status}] {p.reference && `(${p.reference})`}</span>
-                    <span style={{ fontWeight: 'bold' }}>{fmt(p.amount)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Notes / Terms */}
-            {(invoice.notes || invoice.terms) && (
-              <div className="ai-preview-notes" style={{ marginTop: '32px' }}>
-                {invoice.notes && <div style={{ marginBottom: '16px' }}><b style={{ color: '#1e293b' }}>Notes:</b>{"\n"}{invoice.notes}</div>}
-                {invoice.terms && <div><b style={{ color: '#1e293b' }}>Terms & Conditions:</b>{"\n"}{invoice.terms}</div>}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="ai-modal-footer">
-          <button type="button" className="ai-btn ai-btn-outline" onClick={onClose}><X size={14} /> Close</button>
-          <button type="button" className="ai-btn ai-btn-outline" onClick={handlePrint}><Printer size={14} /> Print</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
@@ -540,7 +414,8 @@ export default function EditInvoice() {
       if (res.invoices && res.invoices.template) {
         setInvoice(prev => ({
           ...prev,
-          template: prev.template && prev.template !== "Template 1" ? prev.template : res.invoices.template
+          template: prev.template && prev.template !== "Template 1" ? prev.template : res.invoices.template,
+          customCss: res.invoices.customCss || ""
         }));
       }
     });
@@ -690,8 +565,9 @@ export default function EditInvoice() {
       <style>{styles}</style>
 
       {showPreview && (
-        <PreviewModal
-          invoice={invoice}
+        <DocumentPreviewModal
+          type="invoice"
+          data={invoice}
           items={items}
           payments={payments}
           subtotal={subtotal}
@@ -699,6 +575,7 @@ export default function EditInvoice() {
           discountAmt={discountAmt}
           grandTotal={grandTotal}
           currencySymbol={currencySymbol}
+          customCss={invoice.customCss}
           onClose={() => setShowPreview(false)}
         />
       )}

@@ -4,6 +4,7 @@ import api from "../../services/api";
 import { toast } from "react-toastify";
 import { Printer, Download, ArrowLeft, Edit } from "lucide-react";
 import { useRole } from "../../utils/useRole";
+import { downloadAsPDF } from "../../utils/downloadPDF";
 
 export default function QuoteDetails() {
   const { id } = useParams();
@@ -27,7 +28,7 @@ export default function QuoteDetails() {
   }, [id]);
 
   const handlePrint = () => window.print();
-  const handleDownloadPDF = () => window.print();
+  const handleDownloadPDF = () => downloadAsPDF('quote-print-area', `Quote-${id}.pdf`);
 
   if (loading) return <div className="p-10 flex justify-center text-gray-500">Loading quote details...</div>;
   if (!quote) return <div className="p-10 text-center text-red-600">Quote not found.</div>;
@@ -82,7 +83,7 @@ export default function QuoteDetails() {
         </div>
 
         {/* Quote Paper Document */}
-        <div className="bg-white max-w-[850px] mx-auto border border-gray-200 shadow-xl print:shadow-none print:border-none print:m-0 print:p-0">
+        <div id="quote-print-area" className="bg-white max-w-[850px] mx-auto border border-gray-200 shadow-xl print:shadow-none print:border-none print:m-0 print:p-0">
 
           <div className="p-8 md:p-12">
             {/* Header */}

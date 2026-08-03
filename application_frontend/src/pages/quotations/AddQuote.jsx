@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../services/api";
 import { fetchMultipleSettings, formatAmount, getCurrencySymbol } from "../../services/settingsService";
+import DocumentPreviewModal from "../../components/documents/DocumentPreviewModal";
 
 export default function AddQuote() {
   const navigate = useNavigate();
   const mediaInputRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [clients, setClients] = useState([]);
 
   // Panel collapse states
@@ -76,6 +78,8 @@ export default function AddQuote() {
           quoteDate: today.toISOString().split("T")[0],
           validUntil: valDt.toISOString().split("T")[0],
           terms: qtSettings.terms !== undefined && qtSettings.terms !== null ? qtSettings.terms : prev.terms,
+          template: qtSettings.template || "Template 1",
+          customCss: qtSettings.customCss || ""
         }));
       } else {
         setQuote(prev => ({
@@ -192,6 +196,20 @@ export default function AddQuote() {
 
   return (
     <div className="min-h-screen bg-[#f1f1f1] p-4 text-[#3c434a] font-sans">
+      {showPreview && (
+        <DocumentPreviewModal
+          type="quote"
+          data={{ ...quote, _clientName: clients.find(c => String(c.id) === String(quote.client))?.name || clients.find(c => String(c.id) === String(quote.client))?.client }}
+          items={items}
+          subtotal={subTotal}
+          taxAmount={taxAmount}
+          discountAmt={Number(quote.discount)}
+          grandTotal={grandTotal}
+          currencySymbol={getCurrencySymbol(paymentSettings) || (quote.currency === "INR" ? "₹" : "$")}
+          customCss={quote.customCss}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
       <form onSubmit={handleSubmit} className="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-5">
 
         {/* ================= LEFT COLUMN ================= */}
@@ -480,6 +498,13 @@ export default function AddQuote() {
                   </div>
                 </div>
                 <div className="px-3 pb-3 flex justify-between items-center bg-gray-50 border-t border-gray-200 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(true)}
+                    className="border border-[#8c8f94] text-[#3c434a] hover:bg-[#f0f0f1] bg-white px-3 py-1.5 text-xs rounded-sm transition font-semibold"
+                  >
+                    Preview
+                  </button>
                   <button
                     type="button"
                     onClick={() => navigate("/quotes")}
