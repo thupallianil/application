@@ -10,6 +10,7 @@ const ForgotPassword = () => {
   const [step, setStep] = useState(1); // 1 = enter email, 2 = set new password
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [otp, setOtp] = useState("");
 
   const [form, setForm] = useState({
     email: "",
@@ -21,22 +22,32 @@ const ForgotPassword = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Step 1: Verify email exists
-  const handleVerifyEmail = async (e) => {
+  // Step 1: Send OTP to email
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!form.email) {
       toast.error("Please enter your email address.");
       return;
     }
-    // Move to step 2 — backend verifies email when we submit the reset
-    setStep(2);
+
+    setLoading(true);
+    try {
+      await api.post("/auth/forgot-password/", { email: form.email });
+      toast.success("OTP sent to your email!");
+      setStep(2);
+    } catch (err) {
+      const msg = err.response?.data?.error || "Failed to send OTP. Account may not exist.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Step 2: Submit new password
+  // Step 2: Submit OTP and new password
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
-    if (!form.new_password || !form.confirm_password) {
+    if (!otp || !form.new_password || !form.confirm_password) {
       toast.error("Please fill in all fields.");
       return;
     }
@@ -51,21 +62,27 @@ const ForgotPassword = () => {
 
     try {
       setLoading(true);
-      await api.post("/auth/forgot-password/", {
+      await api.post("/auth/reset-password-otp/", {
         email: form.email,
+        otp: otp,
         new_password: form.new_password,
         confirm_password: form.confirm_password,
       });
       toast.success("Password reset successfully! Please log in with your new password.");
       setTimeout(() => navigate("/"), 2000);
     } catch (err) {
-      toast.error(err.message || "Failed to reset password.");
-      // If email not found, go back to step 1
-      if (err.response?.status === 404) {
-        setStep(1);
-      }
+      toast.error(err.response?.data?.error || "Failed to reset password.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await api.post("/auth/resend-otp/", { email: form.email, purpose: "reset_password" });
+      toast.success("OTP resent successfully!");
+    } catch (err) {
+      toast.error("Failed to resend OTP.");
     }
   };
 
@@ -92,7 +109,7 @@ const ForgotPassword = () => {
         </h1>
         <p className="text-center text-blue-200/70 text-sm mb-8">
           {step === 1
-            ? "Enter your registered email address to continue."
+            ? "Enter your registered email address to receive an OTP."
             : `Resetting password for: ${form.email}`}
         </p>
 
@@ -101,8 +118,8 @@ const ForgotPassword = () => {
           {[1, 2].map((s) => (
             <div key={s} className="flex-1 flex items-center gap-2">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${step >= s
-                  ? "bg-blue-500 border-blue-500 text-white"
-                  : "border-white/20 text-white/30"
+                ? "bg-blue-500 border-blue-500 text-white"
+                : "border-white/20 text-white/30"
                 }`}>
                 {s}
               </div>
@@ -116,7 +133,7 @@ const ForgotPassword = () => {
 
         {/* STEP 1 — Email */}
         {step === 1 && (
-          <form onSubmit={handleVerifyEmail} className="space-y-5">
+          <form onSubmit={handleSendOtp} className="space-y-5">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-blue-100">Email Address</label>
               <div className="relative">
@@ -135,16 +152,33 @@ const ForgotPassword = () => {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 flex items-center justify-center gap-2"
             >
-              Continue
+              {loading ? <><Loader2 size={18} className="animate-spin" /> Sending...</> : "Get OTP"}
             </button>
           </form>
         )}
 
-        {/* STEP 2 — New Password */}
+        {/* STEP 2 — OTP & New Password */}
         {step === 2 && (
           <form onSubmit={handleResetPassword} className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-blue-100">Enter OTP</label>
+              <div className="relative">
+                <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-300/60" size={18} />
+                <input
+                  type="text"
+                  maxLength="6"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="6-digit code"
+                  className="w-full bg-white/5 border border-white/10 text-white placeholder-white/30 rounded-xl py-3 pl-11 pr-4 text-sm tracking-widest text-center font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="block text-sm font-medium text-blue-100">New Password</label>
               <div className="relative">
@@ -204,6 +238,12 @@ const ForgotPassword = () => {
                 className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
               >
                 {loading ? <><Loader2 size={18} className="animate-spin" /> Resetting...</> : "Reset Password"}
+              </button>
+            </div>
+
+            <div className="text-center mt-3">
+              <button type="button" onClick={handleResendOtp} className="text-sm text-blue-300 hover:underline">
+                Didn't receive the OTP? Resend
               </button>
             </div>
           </form>

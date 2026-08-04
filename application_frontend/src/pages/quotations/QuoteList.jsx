@@ -369,21 +369,21 @@ export default function QuoteList() {
                     <td className="p-[10px]">
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleView(q.id)}
+                          onClick={() => navigate(`/quotes/${q.id}`)}
                           className="border border-[#2271b1] p-[3px] rounded-sm text-[#2271b1] bg-white hover:bg-[#f0f0f1]"
                           title="View Details"
                         >
                           <Eye size={16} />
                         </button>
                         <button
-                          onClick={() => navigate(`/quotes/${q.id}`)}
+                          onClick={() => navigate(`/quotes/${q.id}?action=print`)}
                           className="border border-[#8c8f94] p-[3px] rounded-sm text-[#3c434a] bg-white hover:bg-[#f0f0f1]"
                           title="Print Quote"
                         >
                           <Printer size={16} />
                         </button>
                         <button
-                          onClick={() => navigate(`/quotes/${q.id}`)}
+                          onClick={() => navigate(`/quotes/${q.id}?action=download`)}
                           className="border border-[#00a32a] p-[3px] rounded-sm text-[#00a32a] bg-white hover:bg-[#f0f0f1]"
                           title="Download PDF"
                         >

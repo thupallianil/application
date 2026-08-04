@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { toast } from "react-toastify";
 import { Download, ArrowLeft, Edit } from "lucide-react";
@@ -12,6 +12,8 @@ export default function InvoiceDetails() {
   const role = useRole();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const actionTriggered = useRef(false);
 
   useEffect(() => {
     api
@@ -28,6 +30,19 @@ export default function InvoiceDetails() {
   }, [id]);
 
   const handleDownloadPDF = () => downloadAsPDF('invoice-print-area', `Invoice-${id}.pdf`);
+
+  useEffect(() => {
+    if (!loading && invoice && !actionTriggered.current) {
+      const action = searchParams.get('action');
+      if (action === 'print') {
+        actionTriggered.current = true;
+        setTimeout(() => window.print(), 500);
+      } else if (action === 'download') {
+        actionTriggered.current = true;
+        setTimeout(() => handleDownloadPDF(), 500);
+      }
+    }
+  }, [loading, invoice, searchParams]);
 
   if (loading) return <div className="p-10 flex justify-center text-gray-500">Loading invoice details...</div>;
   if (!invoice) return <div className="p-10 text-center text-red-600">Invoice not found.</div>;

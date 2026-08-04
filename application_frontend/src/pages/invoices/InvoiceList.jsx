@@ -93,14 +93,8 @@ export default function InvoiceList() {
 
   const handleEdit = (id) => navigate(`/invoices/edit/${id}`);
   const handleView = (id) => navigate(`/invoices/${id}`);
-  const handlePrint = (id) => {
-    sessionStorage.setItem('invoiceAction', 'print');
-    navigate(`/invoices/${id}`);
-  };
-  const handleDownload = (id) => {
-    sessionStorage.setItem('invoiceAction', 'download');
-    navigate(`/invoices/${id}`);
-  };
+  const handlePrint = (id) => navigate(`/invoices/${id}?action=print`);
+  const handleDownload = (id) => navigate(`/invoices/${id}?action=download`);
   const handleExportCSV = () => {
     // CSV logic
     const headers = ["Invoice", "Client", "Amount", "Status"];

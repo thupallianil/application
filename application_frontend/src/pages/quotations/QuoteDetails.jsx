@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { toast } from "react-toastify";
 import { Download, ArrowLeft, Edit } from "lucide-react";
@@ -9,9 +9,11 @@ import { downloadAsPDF } from "../../utils/downloadPDF";
 export default function QuoteDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const role = useRole();
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
+  const actionTriggered = useRef(false);
 
   useEffect(() => {
     api
@@ -28,6 +30,19 @@ export default function QuoteDetails() {
   }, [id]);
 
   const handleDownloadPDF = () => downloadAsPDF('quote-print-area', `Quote-${id}.pdf`);
+
+  useEffect(() => {
+    if (!loading && quote && !actionTriggered.current) {
+      const action = searchParams.get('action');
+      if (action === 'print') {
+        actionTriggered.current = true;
+        setTimeout(() => window.print(), 500);
+      } else if (action === 'download') {
+        actionTriggered.current = true;
+        setTimeout(() => handleDownloadPDF(), 500);
+      }
+    }
+  }, [loading, quote, searchParams]);
 
   if (loading) return <div className="p-10 flex justify-center text-gray-500">Loading quote details...</div>;
   if (!quote) return <div className="p-10 text-center text-red-600">Quote not found.</div>;
