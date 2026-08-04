@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../services/api";
@@ -363,8 +363,9 @@ function Panel({ title, children, defaultOpen = true }) {
 export default function AddClient() {
   const navigate = useNavigate();
 
-  const [userType, setUserType] = useState("existing");
+  const [userType, setUserType] = useState("new");
   const [loading, setLoading] = useState(false);
+  const [existingUsers, setExistingUsers] = useState([]);
 
   const [formData, setFormData] = useState({
     existingUser: "",
@@ -381,21 +382,41 @@ export default function AddClient() {
     status: "Active"
   });
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
+  // Load existing Django users so admin can link an existing user as a client
+  React.useEffect(() => {
+    api.get("/auth/users/").then(res => {
+      if (Array.isArray(res.data)) setExistingUsers(res.data);
+    }).catch(() => {
+      // endpoint may not exist — silently skip
     });
+  }, []);
+
+  const handleChange = (e) => {
+    const updated = { ...formData, [e.target.name]: e.target.value };
+    // Auto-fill email from existing user selection
+    if (e.target.name === "existingUser" && e.target.value) {
+      const user = existingUsers.find(u => String(u.id) === String(e.target.value));
+      if (user) {
+        updated.email = user.email || "";
+        updated.client = updated.client || `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username || "";
+      }
+    }
+    setFormData(updated);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.client.trim()) { toast.error("Client name is required"); return; }
+    if (!formData.email.trim()) { toast.error("Email is required"); return; }
+    if (!formData.phone.trim()) { toast.error("Phone number is required"); return; }
 
     setLoading(true);
     try {
       await api.post("/clients/", formData);
-      toast.success("Client Added Successfully");
+      const loginMsg = formData.password
+        ? `Client added! They can login with email: ${formData.email} and their set password.`
+        : `Client added! They can login with email: ${formData.email}. A system password was auto-generated — use Forgot Password to set a new one.`;
+      toast.success(loginMsg, { autoClose: 8000 });
       navigate("/clients");
     } catch (err) {
       toast.error(err.message || "Unable to Add Client");
@@ -404,7 +425,7 @@ export default function AddClient() {
   };
 
   const showHelp = () =>
-    toast.info("Create a new client by filling out their details. Choose whether they exist in the system or are completely new.", { autoClose: 6000 });
+    toast.info("Create a new client by filling out their details. The client's email becomes their login — a User account is auto-created for them.", { autoClose: 6000 });
 
   return (
     <>
@@ -469,21 +490,25 @@ export default function AddClient() {
 
               {userType === "existing" && (
                 <>
-                  <Panel title="Select Existing User">
+                  <Panel title="Link Existing System User">
                     <div className="ai-field">
-                      <label className="ai-label">Select User *</label>
+                      <label className="ai-label">Select Existing User *</label>
                       <select
                         name="existingUser"
                         value={formData.existingUser}
                         onChange={handleChange}
                         className="ai-select"
-                        required
                       >
-                        <option value="">— Choose Client —</option>
-                        <option value="1">Client One</option>
-                        <option value="2">Client Two</option>
-                        <option value="3">Client Three</option>
+                        <option value="">— Choose User —</option>
+                        {existingUsers.map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.first_name || u.last_name ? `${u.first_name} ${u.last_name}`.trim() : u.username} ({u.email})
+                          </option>
+                        ))}
                       </select>
+                      <p style={{ fontSize: 11, color: "#646970", marginTop: 6 }}>
+                        Selecting a user will auto-fill their email. They will be able to log in using their existing credentials.
+                      </p>
                     </div>
                   </Panel>
                 </>

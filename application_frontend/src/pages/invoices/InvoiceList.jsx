@@ -10,7 +10,8 @@ import {
   ChevronsRight,
   Download,
   Eye,
-  Printer
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../../services/api";
@@ -34,6 +35,19 @@ export default function InvoiceList() {
 
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
+
+  const [sortKey, setSortKey] = useState("id");
+  const [sortDir, setSortDir] = useState("desc");
+
+  const toggleSort = (key) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  const SortIcon = ({ k }) =>
+    sortKey === k
+      ? sortDir === "asc" ? <ChevronUp size={11} className="inline ml-[2px]" /> : <ChevronDown size={11} className="inline ml-[2px]" />
+      : <span className="inline-block ml-[2px] opacity-30 text-[9px]">▲▼</span>;
 
   const handleSelectAll = (e) => {
     if (e.target.checked) setSelectedIds(paginatedData.map(i => i.id));
@@ -151,6 +165,14 @@ export default function InvoiceList() {
 
     const matchesClient = clientFilter === "" || String(invoice.client) === clientFilter;
     return matchesSearch && matchesStatus && matchesClient && matchesDate;
+  }).sort((a, b) => {
+    const va = String(a[sortKey] || "").toLowerCase();
+    const vb = String(b[sortKey] || "").toLowerCase();
+    if (sortKey === "amount" || sortKey === "total")
+      return sortDir === "asc"
+        ? parseFloat(a.amount || 0) - parseFloat(b.amount || 0)
+        : parseFloat(b.amount || 0) - parseFloat(a.amount || 0);
+    return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE));
@@ -299,14 +321,22 @@ export default function InvoiceList() {
               <th className="font-semibold p-[10px] w-10 border-r border-[#c3c4c7] text-center">
                 <input type="checkbox" onChange={handleSelectAll} checked={paginatedData.length > 0 && selectedIds.length === paginatedData.length} className="rounded-sm border-[#8c8f94]" />
               </th>
-              <th className="font-semibold p-[10px] flex-1 min-w-[220px]">Title <span className="text-[#a7aaad] text-[10px] ml-1">▲▼</span></th>
-              <th className="font-semibold p-[10px] text-[#2c3338]">Number <span className="text-[#a7aaad] text-[10px] ml-1">▲▼</span></th>
-              <th className="font-semibold p-[10px] text-[#2c3338]">Client</th>
-              <th className="font-semibold p-[10px] text-[#2c3338]">Statuses <span className="text-[#a7aaad] text-[10px] ml-1">▲▼</span></th>
-              <th className="font-semibold p-[10px] text-[#2c3338]">Created <span className="text-[#a7aaad] text-[10px] ml-1">▲▼</span></th>
-              <th className="font-semibold p-[10px] text-[#2c3338]">Total <span className="text-[#a7aaad] text-[10px] ml-1">▲▼</span></th>
-              <th className="font-semibold p-[10px] text-[#2c3338]">Actions</th>
-              <th className="font-semibold p-[10px] text-[#2c3338]">Date <span className="text-[#a7aaad] text-[10px] ml-1">▲▼</span></th>
+              {[
+                { label: "Title", key: "invoice" },
+                { label: "Number", key: "id" },
+                { label: "Client", key: "client_name" },
+                { label: "Statuses", key: "status" },
+                { label: "Created", key: "invoiceDate" },
+                { label: "Total", key: "amount" },
+                { label: "Actions", key: "actions", noSort: true },
+                { label: "Date", key: "created_at" }
+              ].map(({ label, key, noSort }) => (
+                <th key={key}
+                  className={`font-semibold p-[10px] text-[#2c3338] whitespace-nowrap ${noSort ? "" : "cursor-pointer hover:bg-[#f0f0f1] select-none"}`}
+                  onClick={() => !noSort && toggleSort(key)}>
+                  {label} {!noSort && <SortIcon k={key} />}
+                </th>
+              ))}
               <th className="font-semibold p-[10px] text-[#2c3338] text-center w-16">Stats</th>
             </tr>
           </thead>
@@ -362,6 +392,7 @@ export default function InvoiceList() {
                     </td>
                     <td className="p-[10px]">
                       <div className="flex gap-2">
+                        {/* View icon — shown for all roles */}
                         <button
                           onClick={() => handleView(inv.id)}
                           className="border border-[#2271b1] p-[3px] rounded-sm text-[#2271b1] bg-white hover:bg-[#f0f0f1]"
@@ -369,20 +400,16 @@ export default function InvoiceList() {
                         >
                           <Eye size={16} />
                         </button>
-                        <button
-                          onClick={() => handlePrint(inv.id)}
-                          className="border border-[#8c8f94] p-[3px] rounded-sm text-[#3c434a] bg-white hover:bg-[#f0f0f1]"
-                          title="Print Invoice"
-                        >
-                          <Printer size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDownload(inv.id)}
-                          className="border border-[#00a32a] p-[3px] rounded-sm text-[#00a32a] bg-white hover:bg-[#f0f0f1]"
-                          title="Download PDF"
-                        >
-                          <Download size={16} />
-                        </button>
+                        {/* Download icon — shown only for client role */}
+                        {role !== "admin" && (
+                          <button
+                            onClick={() => handleDownload(inv.id)}
+                            className="border border-[#00a32a] p-[3px] rounded-sm text-[#00a32a] bg-white hover:bg-[#f0f0f1]"
+                            title="Download PDF"
+                          >
+                            <Download size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="p-[10px] text-[#646970] text-[12px]">
